@@ -1,21 +1,13 @@
 #!/usr/bin/env python3
-import re
 import multiprocessing as mp
 from subprocess import Popen, PIPE
 
+from checker import CheckResult
+from checker import PylintCheck
+from checker import check_unittest
+
+
 WORKERS_COUNT = mp.cpu_count()
-
-class CheckResult:
-    SUCCESS = 'success'
-    WARNING = 'warning'
-    ERROR = 'error'
-
-    def __init__(self, task_name, status=SUCCESS):
-        self.task_name = task_name
-        self.status = status
-        self.summary = ''
-        self.info = ''
-        self.message = ''
 
 def error(text):
     return '\033[1m\033[31m{text}\033[0m'.format(text=text)
@@ -69,50 +61,6 @@ def get_staged_files():
                     if os.path.exists(f) or True]
     return file_list
 
-def run_unittest():
-    test_args = 'python3 -m unittest discover .'.split()
-    test_process = Popen(test_args, stdout=PIPE, stderr=PIPE)
-    test_process.wait()
-    tests_output = test_process.stderr.read().decode(sys.stdout.encoding)
-
-    result = CheckResult('Running python unittest')
-    if not tests_output.endswith('OK\n'):
-        result.status = CheckResult.ERROR
-        result.message = tests_output
-    return result
-
-class PylintCheck:
-    ACCEPTED_PYLINT_RATE = 9
-    RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
-    RE_PYLINT_MESSAGE = re.compile(r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
-
-    def __init__(self, file_name):
-        self.file_name = file_name
-
-    def __call__(self):
-        pylint_args = 'pylint -f parseable {}'.format(self.file_name).split()
-        pylint_process = Popen(pylint_args, stdout=PIPE, stderr=PIPE)
-        pylint_process.wait()
-        pylint_output = pylint_process.stdout.read().decode(sys.stdout.encoding)
-
-        current_rate = float(self.RE_CODE_RATE.findall(pylint_output)[0])
-
-        result = CheckResult('Checking file {} by pylint'.format(self.file_name))
-
-        if current_rate == 10:
-            return result
-
-        messages = '\n'.join(self.RE_PYLINT_MESSAGE.findall(pylint_output))
-        if current_rate >= self.ACCEPTED_PYLINT_RATE:
-            result.status = CheckResult.WARNING
-            result.summary = 'Code Rate {}/10'.format(current_rate)
-        else:
-            result.status = CheckResult.ERROR
-            result.summary = 'Failed: Code Rate {}/10'.format(current_rate)
-        result.message = messages
-
-        return result
-
 if __name__ == '__main__':
     import os
     import sys
@@ -125,7 +73,7 @@ if __name__ == '__main__':
 
     # Add jobs
     jobs = []
-    jobs.append(run_unittest)
+    jobs.append(check_unittest)
     for file_name in py_files:
         jobs.append(PylintCheck(file_name))
 
@@ -138,7 +86,7 @@ if __name__ == '__main__':
     for result in results:
         result = result.get()
         print_result(result)
-        if not result.status == CheckResult.ERROR:
+        if result.status == CheckResult.ERROR:
             is_ok = False
     print('-' * 80)
     if is_ok:
