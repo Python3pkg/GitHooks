@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+./run_pre_commit_hook.py
+exit $?
