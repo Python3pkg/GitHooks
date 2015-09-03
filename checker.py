@@ -51,7 +51,7 @@ class PylintChecker(_SingleFileChecker):
     """Checks pylint code rate
 
     Checks file passed to constructor. Result is success if code has been rated
-    at least as high as PylintChecker.ACCEPTED_PYLINT_RATE is.
+    at least as high as :py:const:`PylintChecker.ACCEPTED_PYLINT_RATE` is.
     """
 
     ACCEPTED_PYLINT_RATE = 9

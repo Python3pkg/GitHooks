@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
+import os
+import sys
 import multiprocessing as mp
 from subprocess import Popen, PIPE
 
 from checker import CheckResult
-from checker import PylintChecker
-from checker import PEP8Checker
-from checker import check_unittest
 import printer
 
 
@@ -13,6 +12,7 @@ WORKERS_COUNT = mp.cpu_count()
 
 
 def get_staged_files():
+    """Return files in git staging area"""
     git_args = 'git diff --staged --name-only'.split()
     git_process = Popen(git_args, stdout=PIPE)
     git_process.wait()
@@ -23,23 +23,16 @@ def get_staged_files():
                     if os.path.exists(f) or True]
     return file_list
 
-if __name__ == '__main__':
-    import os
-    import sys
+def process_jobs(jobs):
+    """Execute checkers and return success information
 
-    # Prepare files
-    file_list = get_staged_files()
-    py_files = [f for f in file_list if f.endswith('.py')]
-    # Exclude test cases
-    py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
+    Execute jobs passed as argument in couple of concurrent processes,
+    for every job prints result information
+    and return value indicating if all jobs succeed.
 
-    # Add jobs
-    jobs = []
-    jobs.append(check_unittest)
-    for file_name in py_files:
-        jobs.append(PylintChecker(file_name))
-        jobs.append(PEP8Checker(file_name))
-
+    :return: 0 if all checks passed, 1 if at least one does not
+    :rtype: integer
+    """
     # Prepare workers and process jobs
     pool = mp.Pool(processes=WORKERS_COUNT)
     results = [pool.apply_async(job) for job in jobs]
@@ -58,6 +51,6 @@ if __name__ == '__main__':
         print(printer.error('Commit aborted'))
 
     if is_ok:
-        sys.exit(0)
+        return 0
     else:
-        sys.exit(1)
+        return 1
