@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Example script run by pre-commit hook"""
 import os
 import sys
 
@@ -8,9 +9,10 @@ from checker import PylintChecker
 from checker import PEP8Checker
 from checker import check_unittest
 import job_processor
+import helper
 
 # Prepare files
-file_list = job_processor.get_staged_files()
+file_list = helper.get_staged_files()
 py_files = [f for f in file_list if f.endswith('.py')]
 # Exclude test cases
 py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
