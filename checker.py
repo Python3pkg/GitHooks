@@ -40,18 +40,23 @@ def check_unittest():
     return result
 
 
-class PylintCheck:
-    """Checks pylint code rate
-
-    Checks file passed to constructor. Result is success if code has been rated
-    at least as high as PylintCheck.ACCEPTED_PYLINT_RATE is.
-    """
-    ACCEPTED_PYLINT_RATE = 9
-    RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
-    RE_PYLINT_MESSAGE = re.compile(r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
+class _SingleFileChecker:
+    """Base class for checkers which checks single file"""
 
     def __init__(self, file_name):
         self.file_name = file_name
+
+
+class PylintChecker(_SingleFileChecker):
+    """Checks pylint code rate
+
+    Checks file passed to constructor. Result is success if code has been rated
+    at least as high as PylintChecker.ACCEPTED_PYLINT_RATE is.
+    """
+
+    ACCEPTED_PYLINT_RATE = 9
+    RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
+    RE_PYLINT_MESSAGE = re.compile(r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
 
     def __call__(self):
         pylint_args = 'pylint -f parseable {}'.format(self.file_name).split()
@@ -75,4 +80,20 @@ class PylintCheck:
             result.summary = 'Failed: Code Rate {}/10'.format(current_rate)
         result.message = messages
 
+        return result
+
+
+class PEP8Checker(_SingleFileChecker):
+    "Checks PEP8 compliance"
+
+    def __call__(self):
+        pep8_args = 'pep8 {}'.format(self.file_name).split()
+        pep8_process = Popen(pep8_args, stdout=PIPE, stderr=PIPE)
+        pep8_process.wait()
+        output = pep8_process.stdout.read().decode(sys.stdout.encoding)
+
+        result = CheckResult('PEP8 compliance for {}'.format(self.file_name))
+        if output:
+            result.status = CheckResult.ERROR
+            result.message = output
         return result

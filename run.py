@@ -3,7 +3,8 @@ import multiprocessing as mp
 from subprocess import Popen, PIPE
 
 from checker import CheckResult
-from checker import PylintCheck
+from checker import PylintChecker
+from checker import PEP8Checker
 from checker import check_unittest
 import printer
 
@@ -36,7 +37,8 @@ if __name__ == '__main__':
     jobs = []
     jobs.append(check_unittest)
     for file_name in py_files:
-        jobs.append(PylintCheck(file_name))
+        jobs.append(PylintChecker(file_name))
+        jobs.append(PEP8Checker(file_name))
 
     # Prepare workers and process jobs
     pool = mp.Pool(processes=WORKERS_COUNT)
