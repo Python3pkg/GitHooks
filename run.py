@@ -5,49 +5,10 @@ from subprocess import Popen, PIPE
 from checker import CheckResult
 from checker import PylintCheck
 from checker import check_unittest
+import printer
 
 
 WORKERS_COUNT = mp.cpu_count()
-
-def error(text):
-    return '\033[1m\033[31m{text}\033[0m'.format(text=text)
-
-def success(text):
-    return '\033[1m\033[32m{text}\033[0m'.format(text=text)
-
-def warning(text):
-    return '\033[1m\033[33m{text}\033[0m'.format(text=text)
-
-def info(text):
-    return '\033[1m\033[34m{text}\033[0m'.format(text=text)
-
-def bold(text):
-    return '\033[1m{text}\033[0m'.format(text=text)
-
-DEFAULT_SUMMARY_TEXT = {
-    CheckResult.SUCCESS: 'OK',
-    CheckResult.WARNING: 'OK',
-    CheckResult.ERROR: 'FAILED'
-}
-
-SUMMARY_FORMAT = {
-    CheckResult.SUCCESS: success,
-    CheckResult.WARNING: warning,
-    CheckResult.ERROR: error
-}
-
-def print_result(result):
-    if result.summary:
-        summary = result.summary
-    else:
-        summary = DEFAULT_SUMMARY_TEXT[result.status]
-    summary = SUMMARY_FORMAT[result.status](summary)
-    task_name = bold(result.task_name)
-    print('* {task}: {summary}'.format(task=task_name, summary=summary))
-    if result.info:
-        print(info(result.info))
-    if result.message:
-        print(result.message)
 
 
 def get_staged_files():
@@ -85,14 +46,14 @@ if __name__ == '__main__':
     is_ok = True
     for result in results:
         result = result.get()
-        print_result(result)
+        printer.print_result(result)
         if result.status == CheckResult.ERROR:
             is_ok = False
     print('-' * 80)
     if is_ok:
-        print(success('OK'))
+        print(printer.success('OK'))
     else:
-        print(error('Commit aborted'))
+        print(printer.error('Commit aborted'))
 
     if is_ok:
         sys.exit(0)

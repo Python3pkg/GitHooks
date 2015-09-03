@@ -1,5 +1,6 @@
 """This package contains functions and classes doing pre-commit checks (checkers)
-and CheckResult class. Checker must be callable and return CheckResult object.
+and :py:class:`CheckResult` class. Checker must be callable and return 
+:py:class:`CheckResult` object.
 """
 import sys
 import re
