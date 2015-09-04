@@ -9,6 +9,8 @@ Number of workers is equal to number of your cpu logical cores, every worker is 
 Some checks are performed on whole project (unittest), other checks are performed on every file (e.g. pylint).
 Only files added to git staging area are taken into account during jobs creation.
 
+.. image:: https://cloud.githubusercontent.com/assets/898669/9682173/74cb7642-5304-11e5-8138-22cf50691879.png
+
 `Currently supported checkers`_
 
 Installation
