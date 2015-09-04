@@ -51,12 +51,15 @@ class PylintChecker(_SingleFileChecker):
     """Checks pylint code rate
 
     Checks file passed to constructor. Result is success if code has been rated
-    at least as high as :py:const:`PylintChecker.ACCEPTED_PYLINT_RATE` is.
+    at least as high as accepted_code_rate constructor argument is.
     """
 
-    ACCEPTED_PYLINT_RATE = 9
     RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
     RE_PYLINT_MESSAGE = re.compile(r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
+    
+    def __init__(self, file_name, accepted_code_rate):
+        super(PylintChecker, self).__init__(file_name)
+        self.accepted_code_rate = accepted_code_rate
 
     def __call__(self):
         pylint_args = 'pylint -f parseable {}'.format(self.file_name).split()
@@ -72,12 +75,13 @@ class PylintChecker(_SingleFileChecker):
             return result
 
         messages = '\n'.join(self.RE_PYLINT_MESSAGE.findall(pylint_output))
-        if current_rate >= self.ACCEPTED_PYLINT_RATE:
+        if current_rate >= self.accepted_code_rate:
             result.status = CheckResult.WARNING
             result.summary = 'Code Rate {}/10'.format(current_rate)
         else:
             result.status = CheckResult.ERROR
             result.summary = 'Failed: Code Rate {}/10'.format(current_rate)
+        # Include pylint messages to result
         result.message = messages
 
         return result
