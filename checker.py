@@ -24,23 +24,6 @@ class CheckResult:
         self.message = ''
 
 
-def check_unittest():
-    """Check if unittest passes
-
-    :rtype: CheckResult
-    """
-    test_args = 'python3 -m unittest discover .'.split()
-    test_process = Popen(test_args, stdout=PIPE, stderr=PIPE)
-    test_process.wait()
-    tests_output = test_process.stderr.read().decode(sys.stdout.encoding)
-
-    result = CheckResult('Running python unittest')
-    if not tests_output.endswith('OK\n'):
-        result.status = CheckResult.ERROR
-        result.message = tests_output
-    return result
-
-
 class _SingleFileChecker:
     """Base class for checkers which checks single file"""
 
@@ -101,17 +84,30 @@ class PylintChecker(_SingleFileChecker):
         return result
 
 
-class PEP8Checker(_SingleFileChecker):
-    "Checks PEP8 compliance"
+class ExitCodeChecker:
+    """Fail if command exits with error code
+
+    Fail if command passed to constructor exits with non 0 return code.
+    """
+
+    def __init__(self, command, task_name):
+        """Set command and task name
+
+        :param command: system shell command
+        :type command: string
+        :param task_name: Task name describing result in console
+        :type task_name: string
+        """
+        self._command = command
+        self._task_name = task_name
 
     def __call__(self):
-        pep8_args = 'pep8 {}'.format(self.file_name).split()
-        pep8_process = Popen(pep8_args, stdout=PIPE, stderr=PIPE)
-        pep8_process.wait()
-        output = pep8_process.stdout.read().decode(sys.stdout.encoding)
-
-        result = CheckResult('PEP8 compliance for {}'.format(self.file_name))
-        if output:
+        args = self._command.split()
+        process = Popen(args, stdout=PIPE, stderr=PIPE)
+        returncode = process.wait()
+        result = CheckResult(self._task_name)
+        if returncode:
             result.status = CheckResult.ERROR
-            result.message = output
+            result.message = process.stdout.read().decode(sys.stdout.encoding)
+            result.message += process.stderr.read().decode(sys.stderr.encoding)
         return result

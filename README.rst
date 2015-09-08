@@ -11,7 +11,10 @@ Only files added to git staging area are taken into account during jobs creation
 
 .. image:: https://cloud.githubusercontent.com/assets/898669/9682173/74cb7642-5304-11e5-8138-22cf50691879.png
 
-`Currently supported checkers`_
+See `Currently supported checkers`_
+
+See `run_pre_commit_hook.py
+<https://github.com/droslaw/GitHooks/blob/master/run_pre_commit_hook.py>`_ for example usage.
 
 Installation
 ------------
@@ -20,7 +23,7 @@ Installation
 3. ``cp GitHooks/run_pre_commit_hook.py ./``
 4. ``cp GitHooks/pre-commit.sample .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit``
 
-Make sure that every requirement of checkers (pylint, pep8) are installed in your system or active virtual environment.
+Make sure that every requirement of checkers (pylint, pep8 etc.) are installed in your system or active virtual environment.
 You should install them manually.
 
 Configuration
@@ -31,26 +34,29 @@ In this file you can specify which checkers for which files will be created.
 
 Currently supported checkers
 ----------------------------
-**unittest**:
+**ExitCodeChecker**:
 
 :Description:
-  Run unittest by executing ``python3 -m unittest discover .``
-
-:Requirements:
-  unittest is part of The Python Standard Library
+  Run system shell command and fail if exit code is non 0
 
 *Usage*:
+Create ``ExitCodeChecker`` object with arguments:
 
-Add ``checker.check_unittest`` function to jobs list in run_pre_commit_hook.py:
+1. command to execute (string)
+2. task name displayed before result in console
 
 .. code:: python
 
   # ...
-  from checker import check_unittest
+  from checker import ExitCodeChecker
   # ...
   jobs = []
   # ...
-  jobs.append(check_unittest)
+  jobs.append(ExitCodeChecker('python3 -m unittest discover .',
+                              'python unittest'))
+
+*Example result:*
+  ``* python unittest: OK``
 
 **pylint**:
 
@@ -72,22 +78,3 @@ Add ``checker.check_unittest`` function to jobs list in run_pre_commit_hook.py:
   jobs = []
   # ...
   jobs.append(PylintChecker(file_name, ACCEPTED_PYLINT_RATE))
-
-**pep8**:
-
-:Description:
-  Passes if pep8 tool does not return any message
-
-:Requirements:
-  pep8
-
-*Usage*:
-
-.. code:: python
-
-  # ...
-  from checker import PEP8Checker
-  # ...
-  jobs = []
-  # ...
-  jobs.append(PEP8Checker(file_name))

@@ -6,8 +6,7 @@ import sys
 # uncomment below line after you move this script to main repository
 sys.path.append(os.path.abspath('./GitHooks/'))
 from checker import PylintChecker
-from checker import PEP8Checker
-from checker import check_unittest
+from checker import ExitCodeChecker
 import job_processor
 import helper
 
@@ -21,9 +20,11 @@ py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
 
 # Add jobs
 jobs = []
-jobs.append(check_unittest)
+jobs.append(ExitCodeChecker('python3 -m unittest discover .',
+                            'python unittest'))
 for file_name in py_files:
     jobs.append(PylintChecker(file_name, ACCEPTED_PYLINT_RATE))
-    jobs.append(PEP8Checker(file_name))
+    jobs.append(ExitCodeChecker('pep8 {}'.format(file_name),
+                                'PEP8: {}'.format(file_name)))
 
 sys.exit(job_processor.process_jobs(jobs))
