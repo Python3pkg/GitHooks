@@ -1,3 +1,6 @@
+"""Exports:
+    :py:func:`process_jobs` - Execute jobs
+"""
 import multiprocessing as mp
 
 from checker import CheckResult
@@ -8,7 +11,7 @@ WORKERS_COUNT = mp.cpu_count()
 
 
 def process_jobs(jobs):
-    """Execute checkers and return success information
+    """Execute jobs and return success information
 
     Execute jobs passed as argument in couple of concurrent processes,
     for every job prints result information

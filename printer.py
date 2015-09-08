@@ -21,20 +21,31 @@ def print_result(result):
     if result.message:
         print(result.message)
 
+
 def error(text):
+    """Colorize terminal output to bold red"""
     return '\033[1m\033[31m{text}\033[0m'.format(text=text)
 
+
 def success(text):
+    """Colorize terminal output to bold green"""
     return '\033[1m\033[32m{text}\033[0m'.format(text=text)
 
+
 def warning(text):
+    """Colorize terminal output to bold yellow"""
     return '\033[1m\033[33m{text}\033[0m'.format(text=text)
 
+
 def info(text):
+    """Colorize terminal output to bold blue"""
     return '\033[1m\033[34m{text}\033[0m'.format(text=text)
 
+
 def bold(text):
+    """Colorize terminal output to bold"""
     return '\033[1m{text}\033[0m'.format(text=text)
+
 
 _DEFAULT_SUMMARY_TEXT = {
     CheckResult.SUCCESS: 'OK',

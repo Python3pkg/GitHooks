@@ -3,7 +3,7 @@
 import os
 import sys
 
-#uncomment below line after you move this script to main repository
+# uncomment below line after you move this script to main repository
 sys.path.append(os.path.abspath('./GitHooks/'))
 from checker import PylintChecker
 from checker import PEP8Checker

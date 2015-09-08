@@ -1,10 +1,13 @@
-"""This package contains functions and classes doing pre-commit checks (checkers)
-and :py:class:`CheckResult` class. Checker must be callable and return 
-:py:class:`CheckResult` object.
+"""Checkers module
+
+This module contains functions and classes doing pre-commit checks
+(checkers) and :py:class:`CheckResult` class. Checker must be callable and
+return :py:class:`CheckResult` object.
 """
 import sys
 import re
 from subprocess import Popen, PIPE
+
 
 class CheckResult:
     """Contains result of single pre-commit check"""
@@ -20,8 +23,6 @@ class CheckResult:
         self.info = ''
         self.message = ''
 
-    def __repr__(self):
-        return '{self.task_name}, {self.status}, {self.summary}, {self.info}, {self.message}'.format(self=self)
 
 def check_unittest():
     """Check if unittest passes
@@ -60,8 +61,9 @@ class PylintChecker(_SingleFileChecker):
     """
 
     RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
-    RE_PYLINT_MESSAGE = re.compile(r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
-    
+    RE_PYLINT_MESSAGE = re.compile(
+        r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
+
     def __init__(self, file_name, accepted_code_rate):
         """Set file path and accepted code rate
 
@@ -75,11 +77,13 @@ class PylintChecker(_SingleFileChecker):
         pylint_args = 'pylint -f parseable {}'.format(self.file_name).split()
         pylint_process = Popen(pylint_args, stdout=PIPE, stderr=PIPE)
         pylint_process.wait()
-        pylint_output = pylint_process.stdout.read().decode(sys.stdout.encoding)
+        pylint_output = pylint_process.stdout.read()\
+            .decode(sys.stdout.encoding)
 
         current_rate = float(self.RE_CODE_RATE.findall(pylint_output)[0])
 
-        result = CheckResult('Checking file {} by pylint'.format(self.file_name))
+        result = CheckResult(
+            'Checking file {} by pylint'.format(self.file_name))
 
         if current_rate == 10:
             return result

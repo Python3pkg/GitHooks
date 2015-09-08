@@ -2,6 +2,7 @@ import os
 import sys
 from subprocess import Popen, PIPE
 
+
 def get_staged_files():
     """Return files in git staging area"""
     git_args = 'git diff --staged --name-only'.split()
@@ -11,5 +12,5 @@ def get_staged_files():
     # Filter deleted files
     file_list = [f for f in [f.strip().decode(sys.stdout.encoding)
                              for f in git_process.stdout.readlines()]
-                    if os.path.exists(f) or True]
+                 if os.path.exists(f) or True]
     return file_list
