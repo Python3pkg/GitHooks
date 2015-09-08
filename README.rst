@@ -14,14 +14,14 @@ Only files added to git staging area are taken into account during jobs creation
 See `Currently supported checkers`_
 
 See `run_pre_commit_hook.py
-<https://github.com/droslaw/GitHooks/blob/master/run_pre_commit_hook.py>`_ for example usage.
+<https://github.com/droslaw/GitHooks/blob/master/samples/run_pre_commit_hook.py>`_ for example usage.
 
 Installation
 ------------
 1. ``cd $REPOSITORY_ROOT_DIR``
 2. ``git submodule add git@github.com:droslaw/GitHooks.git``
-3. ``cp GitHooks/run_pre_commit_hook.py ./``
-4. ``cp GitHooks/pre-commit.sample .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit``
+3. ``cp GitHooks/samples/run_pre_commit_hook.py ./``
+4. ``cp GitHooks/samples/pre-commit .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit``
 
 Make sure that every requirement of checkers (pylint, pep8 etc.) are installed in your system or active virtual environment.
 You should install them manually.
