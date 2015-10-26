@@ -1,10 +1,11 @@
+# pylint: disable=E1101
 """Exports:
     :py:func:`process_jobs` - Execute jobs
 """
 import multiprocessing as mp
 
-from checker import CheckResult
-import printer
+from githooks.checker import CheckResult
+from githooks import printer
 
 
 WORKERS_COUNT = mp.cpu_count()

@@ -1,6 +1,6 @@
 """Module for printing :py:class:`checker.CheckResult` in terminal"""
 
-from checker import CheckResult
+from githooks.checker import CheckResult
 
 
 def print_result(result):
