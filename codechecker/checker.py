@@ -43,7 +43,7 @@ class PylintChecker(_SingleFileChecker):
     at least as high as accepted_code_rate constructor argument is.
     """
 
-    RE_CODE_RATE = re.compile(r'Your code has been rated at ([\d\.]+)/10')
+    RE_CODE_RATE = re.compile(r'Your code has been rated at (-?[\d\.]+)/10')
     RE_PYLINT_MESSAGE = re.compile(
         r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
 

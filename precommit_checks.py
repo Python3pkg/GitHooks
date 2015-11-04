@@ -6,10 +6,10 @@ import sys
 
 # uncomment below line after you move this script to main repository
 # sys.path.append(os.path.abspath('./GitHooks/'))
-from githooks.checker import PylintChecker
-from githooks.checker import ExitCodeChecker
-from githooks import job_processor
-from githooks import helper
+from codechecker.checker import PylintChecker
+from codechecker.checker import ExitCodeChecker
+from codechecker import job_processor
+from codechecker import helper
 
 ACCEPTED_PYLINT_RATE = 9
 

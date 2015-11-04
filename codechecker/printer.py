@@ -1,6 +1,6 @@
 """Module for printing :py:class:`checker.CheckResult` in terminal"""
 
-from githooks.checker import CheckResult
+from codechecker.checker import CheckResult
 
 
 def print_result(result):
@@ -9,10 +9,10 @@ def print_result(result):
     :type value: checker.CheckResult
     """
     if result.summary:
-        summary = result.summary
+        summary_raw = result.summary
     else:
-        summary = _DEFAULT_SUMMARY_TEXT[result.status]
-    summary = _SUMMARY_FORMAT[result.status](summary)
+        summary_raw = _DEFAULT_SUMMARY_TEXT[result.status]
+    summary = _SUMMARY_FORMAT[result.status](summary_raw)
     task_name = bold(result.task_name)
 
     print('* {task}: {summary}'.format(task=task_name, summary=summary))

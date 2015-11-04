@@ -1,0 +1,1 @@
+-e git+https://github.com/jmcgeheeiv/pyfakefs.git#egg=pyfakefs

@@ -4,8 +4,8 @@
 """
 import multiprocessing as mp
 
-from githooks.checker import CheckResult
-from githooks import printer
+from codechecker.checker import CheckResult
+from codechecker import printer
 
 
 WORKERS_COUNT = mp.cpu_count()
