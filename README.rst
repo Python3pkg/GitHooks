@@ -1,39 +1,95 @@
-GitHooks
-========
-This script does any number of checks like unittests or pylint checks before git commit.
+code-checker
+============
+
+This app does any number of checks such as unittests or pylint before git commit.
 If at least one check will not pass, commit is aborted. 
+
+.. image:: https://cloud.githubusercontent.com/assets/898669/10948860/0dcede00-8330-11e5-8b14-5490c4a00d57.png
+
+.. image:: https://cloud.githubusercontent.com/assets/898669/10948864/16ba38b6-8330-11e5-85b8-02bb0332105b.png
+
+To use *code-checker* in your project execute command `setup-githook`. This command
+creates git pre-commit hook (.git/hooks/pre-commit) and precommit_checks.py listed below.
+
+.. code-block:: python
+
+   import os
+   import sys
+   from codechecker.checker import PylintChecker
+   from codechecker.checker import ExitCodeChecker
+   from codechecker import job_processor
+   from codechecker import helper
+   
+   ACCEPTED_PYLINT_RATE = 9
+   
+   # Execute checks only on files added to git staging area
+   file_list = helper.get_staged_files()
+   
+   py_files = [f for f in file_list if f.endswith('.py')]
+   # Exclude test cases
+   py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
+   
+   # Add checkers
+   checkers = []
+   checkers.append(ExitCodeChecker('python3 -m unittest discover .',
+                                   'python unittest'))
+   for file_name in py_files:
+       checkers.append(PylintChecker(file_name, ACCEPTED_PYLINT_RATE))
+       checkers.append(ExitCodeChecker('pep8 {}'.format(file_name),
+                                       'PEP8: {}'.format(file_name)))
+   
+   sys.exit(job_processor.process_jobs(checkers))
+
+Above script executes unit tests for project and pylint along with pep8 for every `.py` file.
+
+`precommit_checks.py` are separated from `.git/hooks/pre-commit` so
+`precommit_checks.py` is under git version control.
 
 Checks are treated as jobs divided among couple of workers.
 Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process.
 
-Some checks are performed on whole project (unittest), other checks are performed on every file (e.g. pylint).
-Only files added to git staging area are taken into account during jobs creation.
-
-.. image:: https://cloud.githubusercontent.com/assets/898669/9682173/74cb7642-5304-11e5-8138-22cf50691879.png
-
 See `Currently supported checkers`_
-
-See `run_pre_commit_hook.py
-<https://github.com/droslaw/GitHooks/blob/master/samples/run_pre_commit_hook.py>`_ for example usage.
 
 Installation
 ------------
-1. ``cd $REPOSITORY_ROOT_DIR``
-2. ``git submodule add git@github.com:droslaw/GitHooks.git``
-3. ``cp GitHooks/samples/run_pre_commit_hook.py ./``
-4. ``cp GitHooks/samples/pre-commit .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit``
 
-Make sure that every requirement of checkers (pylint, pep8 etc.) are installed in your system or active virtual environment.
-You should install them manually.
+.. code-block:: bash
 
-Configuration
+   pip install code-checker
+
+.. note::
+
+   Installation of code-checker requires Python 3 and pip
+
+Uninstallation
+--------------
+
+.. code-block:: bash
+
+   pip uninstall code-checker
+
+Git hooks setup
+---------------
+
+1. Change current working directory to git repository
+   `cd /path/to/repository`
+
+2. Execute `setup-githooks`. This command creates pre-commit hook
+which run `precommit_checker.py` before commit
+
+.. note::
+
+   Make sure that every requirement of checkers (pylint, pep8 etc.) are installed in your system or active virtual environment.
+   You should install them manually.
+
+Customization
 -------------
-To customize pre-commit checking edit *run_pre_commit_hook.py* copied to parent repository.
-Purpose of *run_pre_commit_hook.py* is to create checker jobs and send them to execution in last step.
-In this file you can specify which checkers for which files will be created.
+
+To customize pre-commit checking edit `precommit_checker.py`.
 
 Currently supported checkers
 ----------------------------
+
 **ExitCodeChecker**:
 
 :Description:
