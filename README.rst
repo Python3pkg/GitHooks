@@ -71,11 +71,8 @@ Uninstallation
 Git hooks setup
 ---------------
 
-1. Change current working directory to git repository
-   `cd /path/to/repository`
-
-2. Execute `setup-githooks`. This command creates pre-commit hook
-which run `precommit_checker.py` before commit
+1. Change current working directory to git repository `cd /path/to/repository`
+2. Execute `setup-githooks`. This command creates pre-commit hook which run `precommit_checker.py` before commit
 
 .. note::
 
