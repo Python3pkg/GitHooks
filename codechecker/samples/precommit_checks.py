@@ -6,12 +6,12 @@ import sys
 from codechecker.checker import PylintChecker
 from codechecker.checker import ExitCodeChecker
 from codechecker import job_processor
-from codechecker import helper
+from codechecker import git
 
 ACCEPTED_PYLINT_RATE = 9
 
 # Execute checks only on files added to git staging area
-file_list = helper.get_staged_files()
+file_list = git.get_staged_files()
 
 py_files = [f for f in file_list if f.endswith('.py')]
 # Exclude test cases

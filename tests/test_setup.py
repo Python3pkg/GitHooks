@@ -1,6 +1,5 @@
 import os
 from os import path
-import unittest
 import fake_filesystem_unittest
 import codechecker.setup
 
