@@ -6,9 +6,11 @@ from testfixtures import compare
 from testfixtures.comparison import register
 from codechecker import loader
 from codechecker.checker import ExitCodeChecker
+from codechecker.checker import PylintChecker
 from tests.testcase import TestCase
 
 
+@mock.patch('codechecker.loader.job_processor')
 class LoaderTestCase(TestCase):
     """Test cases for yaml loader"""
 
@@ -16,11 +18,12 @@ class LoaderTestCase(TestCase):
         """Create virtual file structure"""
         self.setUpPyfakefs()
         self.repository_root = '/path/to/repository'
-        self._create_files()
 
-    @mock.patch('codechecker.loader.job_processor')
     def test_loader_executes_checkers_listed_in_config(self, job_processor):
         """For unittest code checker proper ExitCodeChecker is created"""
+        yaml_contents = '- unittest'
+        self._create_files(yaml_contents)
+
         os.chdir(self.repository_root)
         loader.main()
 
@@ -30,9 +33,27 @@ class LoaderTestCase(TestCase):
                                             expected_task_name)])
         job_processor.process_jobs.assert_called_once_with(expected)
 
-    def _create_files(self):
+    @mock.patch('codechecker.loader.git', autospec=True)
+    def test_pylint_checker_is_created_for_every_stashed_file(self, git,
+                                                              job_processor):
+        yaml_contents = '- pylint'
+        self._create_files(yaml_contents)
+        modified_files = ['/path/to/repository/module.py',
+                          '/path/to/repository/module2.py']
+        git.get_staged_files.return_value = modified_files
+
+        os.chdir(self.repository_root)
+        loader.main()
+
+        expected_checkers = []
+        for modified_file_current in modified_files:
+            expected_checkers.append(Matcher(PylintChecker(
+                modified_file_current,
+                loader.DEFAULT_ACCEPTED_PYLINT_RATE)))
+        job_processor.process_jobs.assert_called_once_with(expected_checkers)
+
+    def _create_files(self, yaml_contents):
         """Create all required files and directories"""
-        yaml_contents = """- unittest"""
         repo_root = self.repository_root
         file_structure = {
             path.join(repo_root, 'precommit-checkers.yml'): yaml_contents
@@ -87,4 +108,39 @@ def compare_exitcode_checker(expected, actual, context):
         return '\n'.join(errors)
     return None
 
+
+def compare_pylint_checker(expected, actual, context):
+    """Compare :class:`codechecker.checker.PylintChecker` objects
+
+    :param expected: first object to compare
+    :type expected: codechecker.checker.PylintChecker
+    :param actual: second object to compare
+    :type actual: codechecker.checker.PylintChecker
+    :type context: testfixtures.comparison.CompareContext
+    :returns: None if objects are equal otherwise differences description
+    :rtype: None or string
+    :raises: :exc:`AssertionError`
+    """
+    # pylint: disable=W1504
+    # pylint: disable=W0212
+    if not type(expected) == type(actual):
+        return 'Both compared objects should be PylintChecker. {}, {} given'\
+            .format(context.label('x', repr(type(expected))),
+                    context.label('y', repr(type(actual))))
+    errors = []
+    if expected.file_name != actual.file_name:
+        errors.append('File names are not equal: {} !=  {}'.format(
+            context.label('x', repr(expected.file_name)),
+            context.label('y', repr(actual.file_name)),
+        ))
+    if expected.accepted_code_rate != actual.accepted_code_rate:
+        errors.append('Accepted code rates are not equal:  {} !=  {}'.format(
+            context.label('x', repr(expected.accepted_code_rate)),
+            context.label('y', repr(actual.accepted_code_rate)),
+        ))
+    if errors:
+        return '\n'.join(errors)
+    return None
+
 register(ExitCodeChecker, compare_exitcode_checker)
+register(PylintChecker, compare_pylint_checker)
