@@ -1,22 +1,22 @@
 """Yaml loader test cases"""
 import os
 from os import path
-import fake_filesystem_unittest
 from unittest import mock
 from testfixtures import compare
 from testfixtures.comparison import register
 from codechecker import loader
 from codechecker.checker import ExitCodeChecker
+from tests.testcase import TestCase
 
 
-class LoaderTestCase(fake_filesystem_unittest.TestCase):
+class LoaderTestCase(TestCase):
     """Test cases for yaml loader"""
 
     def setUp(self):
         """Create virtual file structure"""
         self.setUpPyfakefs()
         self.repository_root = '/path/to/repository'
-        self._create_file_structure()
+        self._create_files()
 
     @mock.patch('codechecker.loader.job_processor')
     def test_loader_executes_checkers_listed_in_config(self, job_processor):
@@ -30,20 +30,14 @@ class LoaderTestCase(fake_filesystem_unittest.TestCase):
                                             expected_task_name)])
         job_processor.process_jobs.assert_called_once_with(expected)
 
-    def _create_file_structure(self):
+    def _create_files(self):
         """Create all required files and directories"""
         yaml_contents = """- unittest"""
-        repository_root = self.repository_root
+        repo_root = self.repository_root
         file_structure = {
-            'precommit-checkers.yml': yaml_contents
+            path.join(repo_root, 'precommit-checkers.yml'): yaml_contents
         }
-        os.makedirs(repository_root)
-        for file_path, contents in file_structure.items():
-            abs_path = path.join(repository_root, file_path)
-            if isinstance(contents, str):
-                self.fs.CreateFile(abs_path, contents=contents)
-            elif isinstance(contents, dict):
-                os.makedirs(abs_path)
+        self._create_file_structure(file_structure)
 
 
 class Matcher:
