@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # pylint: disable=C0103
 """Example script run by pre-commit hook"""
-import os
 import sys
 from codechecker.checker import PylintChecker
 from codechecker.checker import ExitCodeChecker
@@ -14,8 +13,6 @@ ACCEPTED_PYLINT_RATE = 9
 file_list = git.get_staged_files()
 
 py_files = [f for f in file_list if f.endswith('.py')]
-# Exclude test cases
-py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
 
 # Add checkers
 checkers = []
