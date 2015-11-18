@@ -4,13 +4,14 @@ from os import path
 from unittest import mock
 from testfixtures import compare
 from testfixtures.comparison import register
+import yaml
 from codechecker import loader
 from codechecker.checker import ExitCodeChecker
 from codechecker.checker import PylintChecker
 from tests.testcase import TestCase
 
 
-@mock.patch('codechecker.loader.job_processor')
+@mock.patch('codechecker.loader.job_processor', autospec=True)
 class LoaderTestCase(TestCase):
     """Test cases for yaml loader"""
 
@@ -21,7 +22,9 @@ class LoaderTestCase(TestCase):
 
     def test_loader_executes_checkers_listed_in_config(self, job_processor):
         """For unittest code checker proper ExitCodeChecker is created"""
-        yaml_contents = '- unittest'
+        yaml_contents = yaml.dump({
+            'checkers': ['unittest']
+        })
         self._create_files(yaml_contents)
 
         os.chdir(self.repository_root)
@@ -36,7 +39,9 @@ class LoaderTestCase(TestCase):
     @mock.patch('codechecker.loader.git', autospec=True)
     def test_pylint_checker_is_created_for_every_stashed_file(self, git,
                                                               job_processor):
-        yaml_contents = '- pylint'
+        yaml_contents = yaml.dump({
+            'checkers': ['pylint']
+        })
         self._create_files(yaml_contents)
         modified_files = ['/path/to/repository/module.py',
                           '/path/to/repository/module2.py']
@@ -49,7 +54,32 @@ class LoaderTestCase(TestCase):
         for modified_file_current in modified_files:
             expected_checkers.append(Matcher(PylintChecker(
                 modified_file_current,
-                loader.DEFAULT_ACCEPTED_PYLINT_RATE)))
+                loader.PylintCheckerFactory
+                .default_config['accepted_code_rate'])))
+        job_processor.process_jobs.assert_called_once_with(expected_checkers)
+
+    @mock.patch('codechecker.loader.git', autospec=True)
+    def test_pylint_checker_can_be_run_with_custom_config(self, git,
+                                                          job_processor):
+        accepted_code_rate = 8
+        yaml_contents = yaml.dump({
+            'checkers': ['pylint'],
+            'config': {
+                'pylint': {'accepted_code_rate': accepted_code_rate}
+            }
+        })
+        self._create_files(yaml_contents)
+        modified_files = ['/path/to/repository/module.py',
+                          '/path/to/repository/module2.py']
+        git.get_staged_files.return_value = modified_files
+
+        os.chdir(self.repository_root)
+        loader.main()
+
+        expected_checkers = []
+        for modified_file_current in modified_files:
+            expected_checkers.append(Matcher(PylintChecker(
+                modified_file_current, accepted_code_rate)))
         job_processor.process_jobs.assert_called_once_with(expected_checkers)
 
     def _create_files(self, yaml_contents):
