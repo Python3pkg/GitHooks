@@ -1,4 +1,5 @@
 """Yaml loader test cases"""
+# pylint: disable=E1101
 import os
 from os import path
 from unittest import mock
@@ -11,7 +12,6 @@ from codechecker.checker import PylintChecker
 from tests.testcase import TestCase
 
 
-@mock.patch('codechecker.loader.job_processor', autospec=True)
 class LoaderTestCase(TestCase):
     """Test cases for yaml loader"""
 
@@ -20,12 +20,17 @@ class LoaderTestCase(TestCase):
         self.setUpPyfakefs()
         self.repository_root = '/path/to/repository'
 
-    def test_loader_executes_checkers_listed_in_config(self, job_processor):
+        job_processor_patcher = mock.patch('codechecker.loader.job_processor',
+                                           autospec=True)
+        self.addCleanup(job_processor_patcher.stop)
+        self.job_processor = job_processor_patcher.start()
+
+    def test_loader_executes_checkers_listed_in_config(self):
         """For unittest code checker proper ExitCodeChecker is created"""
-        yaml_contents = yaml.dump({
+        precommit_yaml_contents = yaml.dump({
             'checkers': ['unittest']
         })
-        self._create_files(yaml_contents)
+        self.setup_git_repository(precommit_yaml_contents)
 
         os.chdir(self.repository_root)
         loader.main()
@@ -34,61 +39,74 @@ class LoaderTestCase(TestCase):
         expected_task_name = 'python unittest'
         expected = Matcher([ExitCodeChecker(expected_command,
                                             expected_task_name)])
-        job_processor.process_jobs.assert_called_once_with(expected)
+        self.job_processor.process_jobs.assert_called_once_with(expected)
 
-    @mock.patch('codechecker.loader.git', autospec=True)
-    def test_pylint_checker_is_created_for_every_stashed_file(self, git,
-                                                              job_processor):
-        yaml_contents = yaml.dump({
+    def test_pylint_checker_is_created_for_every_stashed_file(self):
+        precommit_yaml_contents = yaml.dump({
             'checkers': ['pylint']
         })
-        self._create_files(yaml_contents)
-        modified_files = ['/path/to/repository/module.py',
-                          '/path/to/repository/module2.py']
-        git.get_staged_files.return_value = modified_files
+        staged_files = ['/path/to/repository/module.py',
+                        '/path/to/repository/module2.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         os.chdir(self.repository_root)
         loader.main()
 
-        expected_checkers = []
-        for modified_file_current in modified_files:
-            expected_checkers.append(Matcher(PylintChecker(
-                modified_file_current,
-                loader.PylintCheckerFactory
-                .default_config['accepted_code_rate'])))
-        job_processor.process_jobs.assert_called_once_with(expected_checkers)
+        accepted_code_rate = loader.PylintCheckerFactory\
+            .default_config['accepted_code_rate']
+        self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
 
-    @mock.patch('codechecker.loader.git', autospec=True)
-    def test_pylint_checker_can_be_run_with_custom_config(self, git,
-                                                          job_processor):
+    def test_pylint_checker_can_be_run_with_custom_config(self):
         accepted_code_rate = 8
-        yaml_contents = yaml.dump({
+        precommit_yaml_contents = yaml.dump({
             'checkers': ['pylint'],
             'config': {
                 'pylint': {'accepted_code_rate': accepted_code_rate}
             }
         })
-        self._create_files(yaml_contents)
-        modified_files = ['/path/to/repository/module.py',
-                          '/path/to/repository/module2.py']
-        git.get_staged_files.return_value = modified_files
+        staged_files = ['/path/to/repository/module.py',
+                        '/path/to/repository/module2.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         os.chdir(self.repository_root)
         loader.main()
 
-        expected_checkers = []
-        for modified_file_current in modified_files:
-            expected_checkers.append(Matcher(PylintChecker(
-                modified_file_current, accepted_code_rate)))
-        job_processor.process_jobs.assert_called_once_with(expected_checkers)
+        self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
 
-    def _create_files(self, yaml_contents):
-        """Create all required files and directories"""
+    def setup_git_repository(self, precommit_yaml_contents,
+                             staged_files=None):
+        """Prepare git fake git repository
+
+        Create precommit-checkers.yml with passed test contents.
+        If staged_files is is not empty then checkers acts as if these files
+        was staged, otherwise empty git staging area is simulated."""
+
         repo_root = self.repository_root
+        precommit_yaml_path = path.join(repo_root, 'precommit-checkers.yml')
         file_structure = {
-            path.join(repo_root, 'precommit-checkers.yml'): yaml_contents
+            precommit_yaml_path: precommit_yaml_contents
         }
         self._create_file_structure(file_structure)
+
+        if staged_files is None:
+            staged_files = []
+        git_patcher = mock.patch('codechecker.loader.git', autospec=True)
+        self.addCleanup(git_patcher.stop)
+        git_mock = git_patcher.start()
+        git_mock.get_staged_files.return_value = staged_files
+
+    def assert_pylint_checkers_processed(self, files, accepted_code_rate):
+        """Check if proper pylint checkers are sent to processing
+
+        For every passed file pylint checker should be created with given
+        accepted code rate and then sent to processing."""
+        expected_checkers = []
+        for file_current in files:
+            expected_checkers.append(Matcher(PylintChecker(
+                file_current, accepted_code_rate)))
+        self.job_processor.process_jobs.assert_called_once_with(
+            expected_checkers
+        )
 
 
 class Matcher:
@@ -117,9 +135,9 @@ def compare_exitcode_checker(expected, actual, context):
     :rtype: None or string
     :raises: :exc:`AssertionError`
     """
-    # pylint: disable=W1504
     # pylint: disable=W0212
-    if not type(expected) == type(actual):
+    if not isinstance(expected, ExitCodeChecker)\
+            or not isinstance(actual, ExitCodeChecker):
         return 'Both compared objects should be ExitCodeChecker. {}, {} given'\
             .format(context.label('x', repr(type(expected))),
                     context.label('y', repr(type(actual))))
@@ -151,9 +169,9 @@ def compare_pylint_checker(expected, actual, context):
     :rtype: None or string
     :raises: :exc:`AssertionError`
     """
-    # pylint: disable=W1504
     # pylint: disable=W0212
-    if not type(expected) == type(actual):
+    if not isinstance(expected, PylintChecker)\
+            or not isinstance(actual, PylintChecker):
         return 'Both compared objects should be PylintChecker. {}, {} given'\
             .format(context.label('x', repr(type(expected))),
                     context.label('y', repr(type(actual))))

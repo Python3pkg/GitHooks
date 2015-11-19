@@ -61,7 +61,6 @@ class PylintCheckerFactory:
 
     def get_config_option(self, option_name):
         """Get config option from factory configuration"""
-        print(self.config)
         return self.config[option_name]
 
 
