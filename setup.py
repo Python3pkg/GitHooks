@@ -33,6 +33,7 @@ setup(
     entry_points={
         'console_scripts': [
             'setup-githook = codechecker.setup:main',
+            'check-code = codechecker.loader:main'
         ],
     }
 )

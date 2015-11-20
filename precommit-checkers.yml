@@ -1,0 +1,3 @@
+checkers: [unittest, pep8, pylint]
+config: {pylint: {accepted_code_rate: 9}}
+

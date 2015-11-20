@@ -25,7 +25,7 @@ class LoaderTestCase(TestCase):
         self.addCleanup(job_processor_patcher.stop)
         self.job_processor = job_processor_patcher.start()
 
-    def test_loader_executes_checkers_listed_in_config(self):
+    def test_loader_unittest_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
         precommit_yaml_contents = yaml.dump({
             'checkers': ['unittest']

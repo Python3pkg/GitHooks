@@ -100,7 +100,7 @@ class CheckerFactoryDelegator:
         self.register_factory(
             'pep8',
             lambda: [ExitCodeChecker('pep8 {}'.format(f), 'PEP8 {}:'.format(f))
-                     for f in git.get_staged_files()]
+                     for f in git.get_staged_files() if f.endswith('.py')]
         )
         self.register_factory('pylint', PylintCheckerFactory())
 
