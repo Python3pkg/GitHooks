@@ -34,6 +34,10 @@ class _SingleFileChecker:
         :type file_name: string
         """
         self.file_name = file_name
+        self.abspath = file_name
+
+    def set_abspath(self, abspath):
+        self.abspath = abspath
 
 
 class PylintChecker(_SingleFileChecker):
@@ -57,7 +61,7 @@ class PylintChecker(_SingleFileChecker):
         self.accepted_code_rate = accepted_code_rate
 
     def __call__(self):
-        pylint_args = 'pylint -f parseable {}'.format(self.file_name).split()
+        pylint_args = self.get_command().split()
         pylint_process = Popen(pylint_args, stdout=PIPE, stderr=PIPE)
         pylint_process.wait()
         pylint_output = pylint_process.stdout.read()\
@@ -65,8 +69,7 @@ class PylintChecker(_SingleFileChecker):
 
         current_rate = float(self.RE_CODE_RATE.findall(pylint_output)[0])
 
-        result = CheckResult(
-            'Checking file {} by pylint'.format(self.file_name))
+        result = CheckResult(self.get_taskname())
 
         if current_rate == 10:
             return result
@@ -82,6 +85,14 @@ class PylintChecker(_SingleFileChecker):
         result.message = messages
 
         return result
+
+    def get_command(self):
+        """Get command line command"""
+        return 'pylint -f parseable {}'.format(self.abspath)
+
+    def get_taskname(self):
+        """Get task name"""
+        return 'Pylint {}:'.format(self.file_name)
 
 
 class ExitCodeChecker:

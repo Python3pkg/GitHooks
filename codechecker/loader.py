@@ -93,7 +93,9 @@ class PylintCheckerFactory(CheckerFactory):
     def create_for_file(self, file_path):
         """Create pylint checker for passed file"""
         accepted_code_rate = self.get_config_option('accepted_code_rate')
-        return PylintChecker(file_path, accepted_code_rate)
+        checker = PylintChecker(file_path, accepted_code_rate)
+        checker.set_abspath(git.abspath(file_path))
+        return checker
 
 
 class ExitCodeFileCheckerFactory(CheckerFactory):
@@ -107,7 +109,7 @@ class ExitCodeFileCheckerFactory(CheckerFactory):
 
     def create_for_file(self, file_path):
         """Create ExitCodeChecker for passed file"""
-        command_pattern_params = {'file_path': file_path}
+        command_pattern_params = {'file_path': git.abspath(file_path)}
         command_options = self.get_config_option('command-options')
         if self.is_additional_options_expected():
             command_pattern_params['options'] = command_options

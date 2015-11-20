@@ -18,7 +18,7 @@ class LoaderTestCase(TestCase):
     def setUp(self):
         """Create virtual file structure"""
         self.setUpPyfakefs()
-        self.repository_root = '/path/to/repository'
+        self.repo_root = '/path/to/repository'
 
         job_processor_patcher = mock.patch('codechecker.loader.job_processor',
                                            autospec=True)
@@ -45,15 +45,16 @@ class LoaderTestCase(TestCase):
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {'*.py': ['pep8']}
         })
-        staged_files = ['/path/to/repository/module.py',
-                        '/path/to/repository/module2.py']
+        staged_files = ['module.py',
+                        'module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
 
         expected_checkers = []
         for file_path in staged_files:
-            command = 'pep8 {}'.format(file_path)
+            command = 'pep8 {}' \
+                .format(path.join(self.repo_root, file_path))
             task_name = 'PEP8 {}:'.format(file_path)
             expected_checkers.append(
                 ExitCodeChecker(command, task_name)
@@ -69,14 +70,14 @@ class LoaderTestCase(TestCase):
                 'jshint': {'command-options': '--config .jshintrc'}
             }
         })
-        staged_files = ['/path/to/repository/module.py']
+        staged_files = ['module.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
 
         expected_command = 'jshint --config .jshintrc' \
             ' /path/to/repository/module.py'
-        expected_taskname = 'JSHint /path/to/repository/module.py:'
+        expected_taskname = 'JSHint module.py:'
         self.job_processor.process_jobs.assert_called_once_with(
             Matcher([ExitCodeChecker(expected_command, expected_taskname)])
         )
@@ -87,8 +88,8 @@ class LoaderTestCase(TestCase):
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {'*.py': ['pylint']}
         })
-        staged_files = ['/path/to/repository/module.py',
-                        '/path/to/repository/module2.py']
+        staged_files = ['module.py',
+                        'module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
@@ -103,8 +104,8 @@ class LoaderTestCase(TestCase):
                 'pylint': {'accepted_code_rate': accepted_code_rate}
             }
         })
-        staged_files = ['/path/to/repository/module.py',
-                        '/path/to/repository/module2.py']
+        staged_files = ['module.py',
+                        'module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
@@ -119,13 +120,13 @@ class LoaderTestCase(TestCase):
         If staged_files is is not empty then checkers acts as if these files
         was staged, otherwise empty git staging area is simulated."""
 
-        repo_root = self.repository_root
+        repo_root = self.repo_root
         precommit_yaml_path = path.join(repo_root, 'precommit-checkers.yml')
         file_structure = {
             precommit_yaml_path: precommit_yaml_contents
         }
         self._create_file_structure(file_structure)
-        os.chdir(self.repository_root)
+        os.chdir(self.repo_root)
 
         if staged_files is None:
             staged_files = []
@@ -133,6 +134,8 @@ class LoaderTestCase(TestCase):
         self.addCleanup(git_patcher.stop)
         git_mock = git_patcher.start()
         git_mock.get_staged_files.return_value = staged_files
+        git_mock.abspath.side_effect = \
+            lambda rel_path: path.join(self.repo_root, rel_path)
 
     def assert_pylint_checkers_processed(self, files, accepted_code_rate):
         """Check if proper pylint checkers are sent to processing
@@ -140,9 +143,10 @@ class LoaderTestCase(TestCase):
         For every passed file pylint checker should be created with given
         accepted code rate and then sent to processing."""
         expected_checkers = []
-        for file_current in files:
-            expected_checkers.append(PylintChecker(
-                file_current, accepted_code_rate))
+        for each_file in files:
+            each_checker = PylintChecker(each_file, accepted_code_rate)
+            each_checker.set_abspath(path.join(self.repo_root, each_file))
+            expected_checkers.append(each_checker)
         self.job_processor.process_jobs.assert_called_once_with(
             Matcher(expected_checkers)
         )
@@ -215,10 +219,15 @@ def compare_pylint_checker(expected, actual, context):
             .format(context.label('x', repr(type(expected))),
                     context.label('y', repr(type(actual))))
     errors = []
-    if expected.file_name != actual.file_name:
-        errors.append('File names are not equal: {} !=  {}'.format(
-            context.label('x', repr(expected.file_name)),
-            context.label('y', repr(actual.file_name)),
+    if expected.get_command() != actual.get_command():
+        errors.append('Commands are not equal: {} !=  {}'.format(
+            context.label('x', repr(expected.get_command())),
+            context.label('y', repr(actual.get_command())),
+        ))
+    if expected.get_taskname() != actual.get_taskname():
+        errors.append('Task names are not equal: {} !=  {}'.format(
+            context.label('x', repr(expected.get_taskname())),
+            context.label('y', repr(actual.get_taskname())),
         ))
     if expected.accepted_code_rate != actual.accepted_code_rate:
         errors.append('Accepted code rates are not equal:  {} !=  {}'.format(

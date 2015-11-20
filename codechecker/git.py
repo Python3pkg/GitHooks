@@ -32,6 +32,16 @@ def find_repository_dir(curdir):
         curdir = path.dirname(curdir)
     raise GitRepoNotFoundError('Git repository can not be found')
 
+_REPOSITORY_DIR_PATH = find_repository_dir(os.getcwd())
+
+
+def abspath(rel_path):
+    """Get absolute path
+
+    Convert relative path to absolute one. Passed path must be relative to
+    git repository main directory"""
+    return path.join(_REPOSITORY_DIR_PATH, rel_path)
+
 
 def get_staged_files():
     """Return files in git staging area"""
