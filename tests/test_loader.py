@@ -124,10 +124,10 @@ class LoaderTestCase(TestCase):
         accepted code rate and then sent to processing."""
         expected_checkers = []
         for file_current in files:
-            expected_checkers.append(Matcher(PylintChecker(
-                file_current, accepted_code_rate)))
+            expected_checkers.append(PylintChecker(
+                file_current, accepted_code_rate))
         self.job_processor.process_jobs.assert_called_once_with(
-            expected_checkers
+            Matcher(expected_checkers)
         )
 
 
