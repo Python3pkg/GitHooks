@@ -42,6 +42,7 @@ class LoaderTestCase(TestCase):
         self.job_processor.process_jobs.assert_called_once_with(expected)
 
     def test_pep8_checker_is_created_for_every_stashed_file(self):
+        """ExitCodeChecker can be created for staged files match pattern"""
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {'*.py': ['pep8']}
         })
@@ -60,8 +61,28 @@ class LoaderTestCase(TestCase):
                 ExitCodeChecker(command, task_name)
             )
         expected_checkers = Matcher(expected_checkers)
-        self.job_processor.process_jobs\
+        self.job_processor.process_jobs \
             .assert_called_once_with(expected_checkers)
+
+    def test_ExitCodeCheckerFactory_accepts_config(self):
+        precommit_yaml_contents = yaml.dump({
+            'file-checkers': {'*.py': ['jshint']},
+            'config': {
+                'jshint': {'command-options': '--config .jshintrc'}
+            }
+        })
+        staged_files = ['/path/to/repository/module.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
+
+        os.chdir(self.repository_root)
+        loader.main()
+
+        expected_command = 'jshint --config .jshintrc' \
+            ' /path/to/repository/module.py'
+        expected_taskname = 'JSHint /path/to/repository/module.py:'
+        self.job_processor.process_jobs.assert_called_once_with(
+            Matcher([ExitCodeChecker(expected_command, expected_taskname)])
+        )
 
     def test_checker_is_created_for_every_stashed_file_matching_pattern(self):
         accepted_code_rate = loader.PylintCheckerFactory \

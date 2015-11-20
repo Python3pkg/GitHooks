@@ -48,7 +48,38 @@ def main():
     job_processor.process_jobs(result_checkers)
 
 
-class PylintCheckerFactory:
+class CheckerFactory:
+    default_config = {}
+    checker_name = 'abstract checker'
+
+    def __init__(self):
+        """Copy default configuration to instance"""
+        self.config = copy.copy(self.default_config)
+
+    def set_config(self, config):
+        """Overwrite default configuration
+
+        :type config: dict
+        :raises: :exc:`ValueError` if passed config contains invalid option
+        """
+        for option_name, option_value in config.items():
+            if option_name not in self.default_config:
+                msg = '{} is not valid option for {}' \
+                    .format(option_name, self.checker_name)
+                raise ValueError(msg)
+            self.config[option_name] = option_value
+
+    def get_config_option(self, option_name):
+        """Get config option from factory configuration"""
+        try:
+            return self.config[option_name]
+        except KeyError:
+            msg = '{} is not valid option for {}' \
+                    .format(self.checker_name, option_name)
+            raise KeyError(msg)
+
+
+class PylintCheckerFactory(CheckerFactory):
     """Handle PylintChecker creation"""
 
     default_config = {
@@ -64,34 +95,30 @@ class PylintCheckerFactory:
         accepted_code_rate = self.get_config_option('accepted_code_rate')
         return PylintChecker(file_path, accepted_code_rate)
 
-    def set_config(self, config):
-        """Overwrite default configuration
 
-        :type config: dict
-        :raises: :exc:`ValueError` if passed config contains invalid option
-        """
-        for option_name, option_value in config.items():
-            if option_name not in self.default_config:
-                raise ValueError('{} is not valid option for pylint')
-            self.config[option_name] = option_value
-
-    def get_config_option(self, option_name):
-        """Get config option from factory configuration"""
-        return self.config[option_name]
-
-
-class ExitCodeFileCheckerFactory:
+class ExitCodeFileCheckerFactory(CheckerFactory):
+    default_config = {'command-options': ''}
 
     def __init__(self, command_pattern, taskname_pattern):
-        """Set cammand and task name pattern"""
+        """Set command and task name pattern"""
+        super(ExitCodeFileCheckerFactory, self).__init__()
         self.command_pattern = Template(command_pattern)
         self.taskname_pattern = Template(taskname_pattern)
 
     def create_for_file(self, file_path):
         """Create ExitCodeChecker for passed file"""
-        command = self.command_pattern.substitute(file_path=file_path)
+        command_pattern_params = {'file_path': file_path}
+        command_options = self.get_config_option('command-options')
+        if self.is_additional_options_expected():
+            command_pattern_params['options'] = command_options
+        command = self.command_pattern.substitute(command_pattern_params)
         task_name = self.taskname_pattern.substitute(file_path=file_path)
+
         return ExitCodeChecker(command, task_name)
+
+    def is_additional_options_expected(self):
+        return self.command_pattern.template.find('$options ') >= 0 \
+            or self.command_pattern.template.find('${options}') >= 0
 
 
 class CheckerFactoryDelegator:
@@ -128,6 +155,8 @@ class CheckerFactoryDelegator:
 
     def register_factory(self, checker_name, factory):
         """Add checker factory to delegator"""
+        if isinstance(factory, CheckerFactory):
+            factory.checker_name = checker_name
         self.factories[checker_name] = factory
 
     def register_all_factories(self):
@@ -141,6 +170,11 @@ class CheckerFactoryDelegator:
             ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path:')
         )
         self.register_factory('pylint', PylintCheckerFactory())
+        self.register_factory(
+            'jshint',
+            ExitCodeFileCheckerFactory('jshint $options $file_path',
+                                       'JSHint $file_path:')
+        )
 
     def _get_checker_factory(self, checker_name):
         """Get checker factory by passed checker name"""
