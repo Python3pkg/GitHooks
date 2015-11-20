@@ -28,7 +28,7 @@ class LoaderTestCase(TestCase):
     def test_loader_unittest_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
         precommit_yaml_contents = yaml.dump({
-            'checkers': ['unittest']
+            'project-checkers': ['unittest']
         })
         self.setup_git_repository(precommit_yaml_contents)
 
@@ -43,7 +43,7 @@ class LoaderTestCase(TestCase):
 
     def test_pep8_checker_is_created_for_every_stashed_file(self):
         precommit_yaml_contents = yaml.dump({
-            'checkers': ['pep8']
+            'file-checkers': {'*.py': ['pep8']}
         })
         staged_files = ['/path/to/repository/module.py',
                         '/path/to/repository/module2.py']
@@ -63,9 +63,11 @@ class LoaderTestCase(TestCase):
         self.job_processor.process_jobs\
             .assert_called_once_with(expected_checkers)
 
-    def test_pylint_checker_is_created_for_every_stashed_file(self):
+    def test_checker_is_created_for_every_stashed_file_matching_pattern(self):
+        accepted_code_rate = loader.PylintCheckerFactory \
+            .default_config['accepted_code_rate']
         precommit_yaml_contents = yaml.dump({
-            'checkers': ['pylint']
+            'file-checkers': {'*.py': ['pylint']}
         })
         staged_files = ['/path/to/repository/module.py',
                         '/path/to/repository/module2.py']
@@ -74,14 +76,12 @@ class LoaderTestCase(TestCase):
         os.chdir(self.repository_root)
         loader.main()
 
-        accepted_code_rate = loader.PylintCheckerFactory\
-            .default_config['accepted_code_rate']
         self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
 
     def test_pylint_checker_can_be_run_with_custom_config(self):
         accepted_code_rate = 8
         precommit_yaml_contents = yaml.dump({
-            'checkers': ['pylint'],
+            'file-checkers': {'*.py': ['pylint']},
             'config': {
                 'pylint': {'accepted_code_rate': accepted_code_rate}
             }
