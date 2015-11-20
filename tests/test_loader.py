@@ -32,7 +32,6 @@ class LoaderTestCase(TestCase):
         })
         self.setup_git_repository(precommit_yaml_contents)
 
-        os.chdir(self.repository_root)
         loader.main()
 
         expected_command = 'python3 -m unittest discover .'
@@ -50,7 +49,6 @@ class LoaderTestCase(TestCase):
                         '/path/to/repository/module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        os.chdir(self.repository_root)
         loader.main()
 
         expected_checkers = []
@@ -74,7 +72,6 @@ class LoaderTestCase(TestCase):
         staged_files = ['/path/to/repository/module.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        os.chdir(self.repository_root)
         loader.main()
 
         expected_command = 'jshint --config .jshintrc' \
@@ -94,7 +91,6 @@ class LoaderTestCase(TestCase):
                         '/path/to/repository/module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        os.chdir(self.repository_root)
         loader.main()
 
         self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
@@ -111,14 +107,13 @@ class LoaderTestCase(TestCase):
                         '/path/to/repository/module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        os.chdir(self.repository_root)
         loader.main()
 
         self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
 
     def setup_git_repository(self, precommit_yaml_contents,
                              staged_files=None):
-        """Prepare git fake git repository
+        """Prepare git fake git repository and chdir to git repo
 
         Create precommit-checkers.yml with passed test contents.
         If staged_files is is not empty then checkers acts as if these files
@@ -130,6 +125,7 @@ class LoaderTestCase(TestCase):
             precommit_yaml_path: precommit_yaml_contents
         }
         self._create_file_structure(file_structure)
+        os.chdir(self.repository_root)
 
         if staged_files is None:
             staged_files = []
