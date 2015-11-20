@@ -41,6 +41,28 @@ class LoaderTestCase(TestCase):
                                             expected_task_name)])
         self.job_processor.process_jobs.assert_called_once_with(expected)
 
+    def test_pep8_checker_is_created_for_every_stashed_file(self):
+        precommit_yaml_contents = yaml.dump({
+            'checkers': ['pep8']
+        })
+        staged_files = ['/path/to/repository/module.py',
+                        '/path/to/repository/module2.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
+
+        os.chdir(self.repository_root)
+        loader.main()
+
+        expected_checkers = []
+        for file_path in staged_files:
+            command = 'pep8 {}'.format(file_path)
+            task_name = 'PEP8 {}:'.format(file_path)
+            expected_checkers.append(
+                ExitCodeChecker(command, task_name)
+            )
+        expected_checkers = Matcher(expected_checkers)
+        self.job_processor.process_jobs\
+            .assert_called_once_with(expected_checkers)
+
     def test_pylint_checker_is_created_for_every_stashed_file(self):
         precommit_yaml_contents = yaml.dump({
             'checkers': ['pylint']

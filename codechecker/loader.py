@@ -64,19 +64,6 @@ class PylintCheckerFactory:
         return self.config[option_name]
 
 
-class ExitCodeCheckerFactory:
-    """Create checker based on process exit code"""
-    def create(self):
-        """Create ExitCodeChecker instance"""
-        return ExitCodeChecker('python3 -m unittest discover .',
-                               'python unittest')
-
-CHECKER_NAME_TO_CHECKER_FACTORY_MAP = {
-    'unittest': ExitCodeCheckerFactory(),
-    'pylint': PylintCheckerFactory()
-}
-
-
 class CheckerFactoryDelegator:
     """Delegate requests to proper checker factory
 
@@ -90,7 +77,10 @@ class CheckerFactoryDelegator:
     def create_checker(self, checker_name):
         """Create checker by passed checker name"""
         factory = self._get_checker_factory(checker_name)
-        return factory.create()
+        if callable(factory):
+            return factory()
+        else:
+            return factory.create()
 
     def set_checker_config(self, checker_name, config):
         """Set config to factory corresponding to passed checker name"""
@@ -102,7 +92,16 @@ class CheckerFactoryDelegator:
         self.factories[checker_name] = factory
 
     def register_all_factories(self):
-        self.register_factory('unittest', ExitCodeCheckerFactory())
+        self.register_factory(
+            'unittest',
+            lambda: ExitCodeChecker('python3 -m unittest discover .',
+                                    'python unittest')
+        )
+        self.register_factory(
+            'pep8',
+            lambda: [ExitCodeChecker('pep8 {}'.format(f), 'PEP8 {}:'.format(f))
+                     for f in git.get_staged_files()]
+        )
         self.register_factory('pylint', PylintCheckerFactory())
 
     def _get_checker_factory(self, checker_name):
