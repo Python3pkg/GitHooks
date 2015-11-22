@@ -89,12 +89,14 @@ class LoaderTestCase(TestCase):
             'file-checkers': {'*.py': ['pylint']}
         })
         staged_files = ['module.py',
-                        'module2.py']
+                        'module2.py',
+                        'module.js']
+        py_files = [f for f in staged_files if f.endswith('.py')]
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
 
-        self.assert_pylint_checkers_processed(staged_files, accepted_code_rate)
+        self.assert_pylint_checkers_processed(py_files, accepted_code_rate)
 
     def test_pylint_checker_can_be_run_with_custom_config(self):
         accepted_code_rate = 8
