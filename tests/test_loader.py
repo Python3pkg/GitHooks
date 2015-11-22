@@ -65,19 +65,19 @@ class LoaderTestCase(TestCase):
 
     def test_ExitCodeCheckerFactory_accepts_config(self):
         precommit_yaml_contents = yaml.dump({
-            'file-checkers': {'*.py': ['jshint']},
+            'file-checkers': {'*.js': ['jshint']},
             'config': {
                 'jshint': {'command-options': '--config .jshintrc'}
             }
         })
-        staged_files = ['module.py']
+        staged_files = ['module.js']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
         loader.main()
 
         expected_command = 'jshint --config .jshintrc' \
-            ' /path/to/repository/module.py'
-        expected_taskname = 'JSHint module.py:'
+            ' /path/to/repository/module.js'
+        expected_taskname = 'JSHint module.js:'
         self.job_processor.process_jobs.assert_called_once_with(
             Matcher([ExitCodeChecker(expected_command, expected_taskname)])
         )
