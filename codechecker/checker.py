@@ -94,6 +94,10 @@ class PylintChecker(_SingleFileChecker):
         """Get task name"""
         return 'Pylint {}:'.format(self.file_name)
 
+    def __repr__(self):
+        return '<PylintChecker: {} accepted_code_rate: {}>'\
+            .format(self.file_name, self.accepted_code_rate)
+
 
 class ExitCodeChecker:
     """Fail if command exits with error code

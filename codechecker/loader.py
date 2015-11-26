@@ -48,6 +48,26 @@ def main():
     job_processor.process_jobs(result_checkers)
 
 
+def _sort_file_patterns(pattern_list):
+    """Sort file patterns
+
+    Sort file patterns so that more specific patterns are befor more generic
+    patterns. For example if we have patterns ['*.py', 'tests/*.py'] result
+    should be ['tests/*.py', '*.py']"""
+    patterns_sorted = []
+    for pattern_to_insert in pattern_list:
+        for index, pattern_inserted in enumerate(patterns_sorted):
+            if fnmatch.fnmatch(pattern_to_insert, pattern_inserted):
+                # more generic pattern is already inserted into result list
+                # so pattern_to_insert must by inserted before
+                patterns_sorted.insert(index, pattern_to_insert)
+                break
+        else:
+            # there is no more generic patterns in result list
+            patterns_sorted.append(pattern_to_insert)
+    return patterns_sorted
+
+
 class CheckerFactory:
     default_config = {}
     checker_name = 'abstract checker'
