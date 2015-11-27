@@ -95,8 +95,12 @@ class PylintChecker(_SingleFileChecker):
         return 'Pylint {}:'.format(self.file_name)
 
     def __repr__(self):
-        return '<PylintChecker: {} accepted_code_rate: {}>'\
-            .format(self.file_name, self.accepted_code_rate)
+        return '<PylintChecker file={}, accepted_code_rate={}, abspath={}>'\
+            .format(
+                repr(self.file_name),
+                repr(self.accepted_code_rate),
+                repr(self.abspath)
+            )
 
 
 class ExitCodeChecker:
@@ -126,3 +130,9 @@ class ExitCodeChecker:
             result.message = process.stdout.read().decode(sys.stdout.encoding)
             result.message += process.stderr.read().decode(sys.stderr.encoding)
         return result
+
+    def __repr__(self):
+        return '<ExitCodeChecker: command={}, task_name={}>'.format(
+                repr(self._command),
+                repr(self._task_name)
+            )

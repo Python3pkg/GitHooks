@@ -13,7 +13,10 @@ from tests.comparison import UnOrderedCollectionMatcher
 
 
 class LoaderTestCase(TestCase):
-    """Test cases for yaml loader"""
+    """Test cases for yaml loader
+
+    This class test if yaml loader creates proper checkers with proper
+    parameters for stashed files"""
 
     def setUp(self):
         """Create virtual file structure"""
@@ -56,7 +59,7 @@ class LoaderTestCase(TestCase):
         for file_path in staged_files:
             command = 'pep8 {}' \
                 .format(path.join(self.repo_root, file_path))
-            task_name = 'PEP8 {}:'.format(file_path)
+            task_name = 'PEP8 {}'.format(file_path)
             expected_checkers.append(
                 ExitCodeChecker(command, task_name)
             )
@@ -78,7 +81,7 @@ class LoaderTestCase(TestCase):
 
         expected_command = 'jshint --config .jshintrc' \
             ' /path/to/repository/module.js'
-        expected_taskname = 'JSHint module.js:'
+        expected_taskname = 'JSHint module.js'
         self.job_processor.process_jobs.assert_called_once_with(
             UnOrderedCollectionMatcher(
                 [ExitCodeChecker(expected_command, expected_taskname)]
@@ -87,8 +90,7 @@ class LoaderTestCase(TestCase):
 
     def test_checker_is_created_for_every_stashed_file_matching_pattern(self):
         """Only files matching pattern should have created checkers"""
-        accepted_code_rate = loader.PylintCheckerFactory \
-            .default_config['accepted_code_rate']
+        accepted_code_rate = _get_default_acceptedcoderate()
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {'*.py': ['pylint']}
         })
@@ -101,6 +103,36 @@ class LoaderTestCase(TestCase):
         loader.main()
 
         self.assert_pylint_checkers_executed(py_files, accepted_code_rate)
+
+    def test_each_file_match_most_specific_pattern(self):
+        """For each file only checkers from one pattern should be created"""
+        precommit_yaml_contents = yaml.dump({
+            'file-checkers': {
+                '*.py': ['pylint'],
+                'tests/*.py': ['pep8']
+            }
+        })
+        staged_files = ['module.py',
+                        'tests/module2.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
+
+        loader.main()
+
+        expected_pylintchecker = PylintChecker(
+            'module.py',
+            _get_default_acceptedcoderate()
+        )
+        expected_pylintchecker.set_abspath(
+            path.join(self.repo_root, 'module.py')
+        )
+        expected_pep8_checker = ExitCodeChecker(
+            'pep8 {}'.format(path.join(self.repo_root, 'tests/module2.py')),
+            'PEP8 {}'.format('tests/module2.py')
+        )
+        expected_checkers = [expected_pylintchecker, expected_pep8_checker]
+        self.job_processor.process_jobs.assert_called_once_with(
+            UnOrderedCollectionMatcher(expected_checkers)
+        )
 
     def test_sort_file_patterns(self):
         unsorted_patterns = ['*.py', 'tests/*.py']
@@ -163,6 +195,11 @@ class LoaderTestCase(TestCase):
         self.job_processor.process_jobs.assert_called_once_with(
             UnOrderedCollectionMatcher(expected_checkers)
         )
+
+
+def _get_default_acceptedcoderate():
+    return loader.PylintCheckerFactory \
+        .default_config['accepted_code_rate']
 
 
 def _compare_pylint_checker(expected, actual):

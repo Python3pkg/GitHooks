@@ -37,8 +37,13 @@ def main():
 
     # Create checkers for staged files
     staged_files = git.get_staged_files()
-    for path_pattern, checkers_list in file_checkers.items():
-        matched_files = fnmatch.filter(staged_files, path_pattern)
+    files_already_matched = set()
+    patterns_sorted = sort_file_patterns(file_checkers.keys())
+    for path_pattern in patterns_sorted:
+        checkers_list = file_checkers[path_pattern]
+        matched_files = set(fnmatch.filter(staged_files, path_pattern))
+        matched_files -= files_already_matched
+        files_already_matched.update(matched_files)
         for each_file in matched_files:
             result_checkers.extend(checker_factory.create_file_checkers(
                 each_file, checkers_list
@@ -189,13 +194,13 @@ class CheckerFactoryDelegator:
         )
         self.register_factory(
             'pep8',
-            ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path:')
+            ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path')
         )
         self.register_factory('pylint', PylintCheckerFactory())
         self.register_factory(
             'jshint',
             ExitCodeFileCheckerFactory('jshint $options $file_path',
-                                       'JSHint $file_path:')
+                                       'JSHint $file_path')
         )
 
     def _get_checker_factory(self, checker_name):
