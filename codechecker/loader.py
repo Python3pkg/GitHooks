@@ -48,7 +48,7 @@ def main():
     job_processor.process_jobs(result_checkers)
 
 
-def _sort_file_patterns(pattern_list):
+def sort_file_patterns(pattern_list):
     """Sort file patterns
 
     Sort file patterns so that more specific patterns are befor more generic
