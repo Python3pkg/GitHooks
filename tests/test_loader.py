@@ -27,6 +27,7 @@ class LoaderTestCase(TestCase):
                                            autospec=True)
         self.addCleanup(job_processor_patcher.stop)
         self.job_processor = job_processor_patcher.start()
+        self.job_processor.process_jobs.return_value = 0
 
     def test_loader_unittest_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
@@ -157,9 +158,45 @@ class LoaderTestCase(TestCase):
 
         self.assert_pylint_checkers_executed(staged_files, accepted_code_rate)
 
+    def test_config_can_be_set_for_file_pattern(self):
+        precommit_yaml_contents = yaml.dump({
+            'file-checkers': {
+                '*.py': ['pylint'],
+                'tests/*.py': [{'pylint': {'accepted_code_rate': 7}}]
+            },
+            'config': {
+                'pylint': {'accepted_code_rate': 8}
+            }
+        })
+        staged_files = ['module.py',
+                        'tests/module.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
+
+        loader.main()
+
+        accepted_code_rate = {
+            'module.py': 8,
+            'tests/module.py': 7
+        }
+        self.assert_pylint_checkers_executed(staged_files, accepted_code_rate)
+
+    def test_script_exit_status_is_1_if_checker_fail(self):
+        """If checker fail script should exit with code 1"""
+        self.job_processor.process_jobs.return_value = 1
+        precommit_yaml_contents = yaml.dump({
+            'project-checkers': ['unittest']
+        })
+        self.setup_git_repository(precommit_yaml_contents)
+
+        with self.assertRaises(SystemExit) as context:
+            loader.main()
+        exc = context.exception
+        self.assertEqual(1, exc.code,
+                         'If checker fail script should exit with code 1')
+
     def setup_git_repository(self, precommit_yaml_contents,
                              staged_files=None):
-        """Prepare git fake git repository and chdir to git repo
+        """Prepare fake git repository and chdir to git repo
 
         Create precommit-checkers.yml with passed test contents.
         If staged_files is is not empty then checkers acts as if these files
@@ -186,10 +223,24 @@ class LoaderTestCase(TestCase):
         """Check if proper pylint checkers are sent to processing
 
         For every passed file pylint checker should be created with given
-        accepted code rate and then sent to processing."""
+        accepted code rate and then sent to processing.
+
+        :param files: list of files
+        :param accepted_code_rate: if is dict then map every file to accepted
+            code rate, otherwise if it is int then it is accepted code rate for
+            all checkers
+        :type accepted_code_rate: int or dict"""
+        if isinstance(accepted_code_rate, int):
+            all_accepted_coderate = {}
+            for each_file in files:
+                all_accepted_coderate[each_file] = accepted_code_rate
+        else:
+            all_accepted_coderate = accepted_code_rate
+
         expected_checkers = []
         for each_file in files:
-            each_checker = PylintChecker(each_file, accepted_code_rate)
+            each_accepted_coderate = all_accepted_coderate[each_file]
+            each_checker = PylintChecker(each_file, each_accepted_coderate)
             each_checker.set_abspath(path.join(self.repo_root, each_file))
             expected_checkers.append(each_checker)
         self.job_processor.process_jobs.assert_called_once_with(
@@ -198,8 +249,8 @@ class LoaderTestCase(TestCase):
 
 
 def _get_default_acceptedcoderate():
-    return loader.PylintCheckerFactory \
-        .default_config['accepted_code_rate']
+    """Get accepted code rate from PylintChecker config"""
+    return loader.PylintCheckerFactory.default_config['accepted_code_rate']
 
 
 def _compare_pylint_checker(expected, actual):
