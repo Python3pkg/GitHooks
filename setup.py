@@ -29,10 +29,8 @@ setup(
     ],
     packages=['codechecker'],
     include_package_data=True,
-    package_data={'codechecker': ['samples/pre_commit_checks.py']},
     entry_points={
         'console_scripts': [
-            'setup-githook = codechecker.setup:main',
             'check-code = codechecker.loader:main'
         ],
     }
