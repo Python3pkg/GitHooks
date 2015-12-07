@@ -1,3 +1,4 @@
 project-checkers: [unittest]
+file-checkers:
+  '*.py': [pylint, pep8]
 config: {pylint: {accepted_code_rate: 9}}
-

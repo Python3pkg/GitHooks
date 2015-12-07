@@ -1,6 +1,6 @@
 """Module for printing :py:class:`checker.CheckResult` in terminal"""
 
-from codechecker.checker import CheckResult
+from codechecker.checker.base import CheckResult
 
 
 def print_result(result):

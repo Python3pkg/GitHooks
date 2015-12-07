@@ -8,8 +8,8 @@ from string import Template
 
 from codechecker import job_processor
 from codechecker import git
-from codechecker.checker import ExitCodeChecker
-from codechecker.checker import PylintChecker
+from codechecker.checker.base import (ExitCodeChecker,
+                                      PylintChecker)
 
 
 def main():

@@ -133,6 +133,6 @@ class ExitCodeChecker:
 
     def __repr__(self):
         return '<ExitCodeChecker: command={}, task_name={}>'.format(
-                repr(self._command),
-                repr(self._task_name)
-            )
+            repr(self._command),
+            repr(self._task_name)
+        )

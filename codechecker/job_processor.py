@@ -4,7 +4,7 @@
 """
 import multiprocessing as mp
 
-from codechecker.checker import CheckResult
+from codechecker.checker.base import CheckResult
 from codechecker import printer
 
 

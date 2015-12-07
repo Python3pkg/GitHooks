@@ -6,8 +6,8 @@ from unittest import mock
 import yaml
 
 from codechecker import loader
-from codechecker.checker import (ExitCodeChecker,
-                                 PylintChecker)
+from codechecker.checker.base import (ExitCodeChecker,
+                                      PylintChecker)
 from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
