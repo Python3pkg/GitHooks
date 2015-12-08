@@ -7,7 +7,7 @@ import fnmatch
 from codechecker import job_processor
 from codechecker import git
 from codechecker.checker.base import ExitCodeChecker
-from codechecker.checker.factory import (PylintCheckerFactory,
+from codechecker.checker.builder import (PylintCheckerFactory,
                                          ExitCodeFileCheckerFactory,
                                          CheckerFactory)
 
