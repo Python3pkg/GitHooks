@@ -8,6 +8,7 @@ import yaml
 from codechecker import loader
 from codechecker.checker.base import (ExitCodeChecker,
                                       PylintChecker)
+from codechecker import git
 from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
@@ -212,12 +213,20 @@ class LoaderTestCase(TestCase):
 
         if staged_files is None:
             staged_files = []
-        git_patcher = mock.patch('codechecker.loader.git', autospec=True)
-        self.addCleanup(git_patcher.stop)
-        git_mock = git_patcher.start()
-        git_mock.get_staged_files.return_value = staged_files
-        git_mock.abspath.side_effect = \
+        staged_files_patch = mock.patch.object(
+            git,
+            'get_staged_files',
+            lambda: staged_files
+        )
+        abspath_patch = mock.patch.object(
+            git,
+            'abspath',
             lambda rel_path: path.join(self.repo_root, rel_path)
+        )
+        self.addCleanup(staged_files_patch.stop)
+        self.addCleanup(abspath_patch.stop)
+        staged_files_patch.start()
+        abspath_patch.start()
 
     def assert_pylint_checkers_executed(self, files, accepted_code_rate):
         """Check if proper pylint checkers are sent to processing
