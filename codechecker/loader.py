@@ -7,14 +7,19 @@ import fnmatch
 from codechecker import job_processor
 from codechecker import git
 from codechecker.checker.base import ExitCodeChecker
-from codechecker.checker.builder import (PylintCheckerFactory,
-                                         ExitCodeFileCheckerFactory,
-                                         CheckerFactory)
+from codechecker.checker.builder import (CheckListBuilder,
+                                         PylintCheckerFactory,
+                                         ExitCodeFileCheckerFactory)
 
 
 def main():
-    checker_factory = CheckerFactoryDelegator()
-    checker_factory.register_all_factories()
+    checklist_builder = CheckListBuilder()
+    checklist_builder.register_projectchecker(
+        _PROJECT_CHECKER_CREATORS
+    )
+    checklist_builder.register_filechecker(
+        _FILE_CHECKER_CREATORS
+    )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
 
     project_checkers = checkers_data['project-checkers'] \
@@ -25,17 +30,12 @@ def main():
         if 'config' in checkers_data else {}
 
     for each_checkername, each_checkerconf in checkers_config.items():
-        checker_factory.set_checker_config(each_checkername, each_checkerconf)
-
-    result_checkers = []
+        checklist_builder.set_checker_config(each_checkername,
+                                             each_checkerconf)
 
     # Create project checkers
     for each_checkername in project_checkers:
-        checker = checker_factory.create_checker(each_checkername)
-        if isinstance(checker, list):
-            result_checkers.extend(checker)
-        else:
-            result_checkers.append(checker)
+        checklist_builder.add_project_checker(each_checkername)
 
     # Create checkers for staged files
     staged_files = git.get_staged_files()
@@ -47,11 +47,10 @@ def main():
         matched_files -= files_already_matched
         files_already_matched.update(matched_files)
         for each_file in matched_files:
-            result_checkers.extend(checker_factory.create_file_checkers(
-                each_file, checkers_list
-            ))
+            checklist_builder.add_all_filecheckers(each_file, checkers_list)
 
     # Execute checkers
+    result_checkers = checklist_builder.get_checker_tasks()
     if job_processor.process_jobs(result_checkers):
         sys.exit(1)
     else:
@@ -61,7 +60,7 @@ def main():
 def sort_file_patterns(pattern_list):
     """Sort file patterns
 
-    Sort file patterns so that more specific patterns are befor more generic
+    Sort file patterns so that more specific patterns are before more generic
     patterns. For example if we have patterns ['*.py', 'tests/*.py'] result
     should be ['tests/*.py', '*.py']"""
     patterns_sorted = []
@@ -78,71 +77,15 @@ def sort_file_patterns(pattern_list):
     return patterns_sorted
 
 
-class CheckerFactoryDelegator:
-    """Delegate requests to proper checker factory
+_PROJECT_CHECKER_CREATORS = {
+    'unittest': lambda: ExitCodeChecker('python3 -m unittest discover .',
+                                        'python unittest')
+}
 
-    Delegate requests (checker creation, setting config to checker factory)
-    to proper factory
-    """
 
-    def __init__(self):
-        self.factories = {}
-
-    def create_checker(self, checker_name):
-        """Create checker by passed checker name"""
-        factory = self._get_checker_factory(checker_name)
-        if callable(factory):
-            return factory()
-        else:
-            return factory.create()
-
-    def create_file_checker(self, checker_data, file_path):
-        if isinstance(checker_data, dict):
-            checker_type = next(iter(checker_data))
-            config = checker_data[checker_type]
-        else:
-            checker_type = checker_data
-            config = None
-        factory = self._get_checker_factory(checker_type)
-        return factory.create_for_file(file_path, config)
-
-    def create_file_checkers(self, file_path, checkers_list):
-        """Create specified checkers for given file"""
-        return [self.create_file_checker(checker_data, file_path)
-                for checker_data in checkers_list]
-
-    def set_checker_config(self, checker_name, config):
-        """Set config to factory corresponding to passed checker name"""
-        factory = self._get_checker_factory(checker_name)
-        factory.set_config(config)
-
-    def register_factory(self, checker_name, factory):
-        """Add checker factory to delegator"""
-        if isinstance(factory, CheckerFactory):
-            factory.checker_name = checker_name
-        self.factories[checker_name] = factory
-
-    def register_all_factories(self):
-        self.register_factory(
-            'unittest',
-            lambda: ExitCodeChecker('python3 -m unittest discover .',
-                                    'python unittest')
-        )
-        self.register_factory(
-            'pep8',
-            ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path')
-        )
-        self.register_factory('pylint', PylintCheckerFactory())
-        self.register_factory(
-            'jshint',
-            ExitCodeFileCheckerFactory('jshint $options $file_path',
-                                       'JSHint $file_path')
-        )
-
-    def _get_checker_factory(self, checker_name):
-        """Get checker factory by passed checker name"""
-        try:
-            factory = self.factories[checker_name]
-        except KeyError:
-            raise RuntimeError('Invalid checker name {}'.format(checker_name))
-        return factory
+_FILE_CHECKER_CREATORS = {
+    'pep8': ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path'),
+    'pylint': PylintCheckerFactory(),
+    'jshint': ExitCodeFileCheckerFactory('jshint $options $file_path',
+                                         'JSHint $file_path')
+}
