@@ -1,52 +1,97 @@
 code-checker
 ============
 
-This app does any number of checks such as unittests or pylint before git commit.
-If at least one check will not pass, commit is aborted. 
+Intro
+
+This app does any number of checks such as unittests or lint during pre-commit check.
+If at least one check will not pass, commit is aborted.
+
+Checkers can be also run by command `check-code`
+
+Checkers are treated as jobs divided among couple of workers.
+Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process (on separate cpu core).
 
 .. image:: https://cloud.githubusercontent.com/assets/898669/10948860/0dcede00-8330-11e5-8b14-5490c4a00d57.png
 
 .. image:: https://cloud.githubusercontent.com/assets/898669/10948864/16ba38b6-8330-11e5-85b8-02bb0332105b.png
 
 To use *code-checker* in your project execute command `setup-githook`. This command
-creates git pre-commit hook (.git/hooks/pre-commit) and precommit_checks.py listed below.
+creates git pre-commit hook (.git/hooks/pre-commit) and `precommit-checkers.yml`.
 
-.. code-block:: python
+In `precommit-checkers.yml` you can configure which checkers checks which files and define checkers configuration. 
 
-   import os
-   import sys
-   from codechecker.checker import PylintChecker
-   from codechecker.checker import ExitCodeChecker
-   from codechecker import job_processor
-   from codechecker import helper
-   
-   ACCEPTED_PYLINT_RATE = 9
-   
-   # Execute checks only on files added to git staging area
-   file_list = helper.get_staged_files()
-   
-   py_files = [f for f in file_list if f.endswith('.py')]
-   # Exclude test cases
-   py_files = [f for f in py_files if not os.path.basename(f).startswith('test_')]
-   
-   # Add checkers
-   checkers = []
-   checkers.append(ExitCodeChecker('python3 -m unittest discover .',
-                                   'python unittest'))
-   for file_name in py_files:
-       checkers.append(PylintChecker(file_name, ACCEPTED_PYLINT_RATE))
-       checkers.append(ExitCodeChecker('pep8 {}'.format(file_name),
-                                       'PEP8: {}'.format(file_name)))
-   
-   sys.exit(job_processor.process_jobs(checkers))
+There are two categories of checkers: project-checkers and file-checker. 
 
-Above script executes unit tests for project and pylint along with pep8 for every `.py` file.
+Every project-checker is executed only once during pre-commit check. Example of project-checker is `unittest` - this checker is executed for whole project.
 
-`precommit_checks.py` are separated from `.git/hooks/pre-commit` so
-`precommit_checks.py` is under git version control.
+Every `file-checker` can be executed for every file in git staging area (git index). See examples below.
 
-Checks are treated as jobs divided among couple of workers.
-Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process.
+Currently supported checkers are:
+
+- unittest:
+   python unittest runner
+- pylint
+- pep8
+- jshint
+
+In near future more checkers will be added, especially for php and js.
+
+Examples
+--------
+
+.. code-block:: yaml
+
+   project-checkers: [unittest]
+   file-checkers:
+     '*.py': [pylint, pep8]
+     '*.js': 'jshint'
+
+If your `precommit-checkers.yml` is same as above, pre-commit check will execute python unittest for project, pylint and pep8 for *.py files and jshint for js files.
+
+`pep8` and `jshint` checkers does not pass if at least one warning will occur. `pylint` does not pass if computed code rate is below `accepted_code_rate`, default `accepted_code_rate` is 9.
+
+.. code-block:: yaml
+
+   project-checkers: [unittest]
+   file-checkers:
+     '*.py': [pylint, pep8]
+     '*.js': 'jshint'
+   config: 
+     pylint: {accepted_code_rate: 8}
+
+This example shows how to set global configuration for specified checkers. Above configuration has similar effect as previous example but here accepted code rate computed by pylint is set to 8.
+
+.. code-block:: yaml
+
+   project-checkers: [unittest]
+   file-checkers:
+     '*.py': [pylint, pep8]
+     'tests/*.py':
+       - pylint: {accepted_code_rate: 8}
+   config: 
+     pylint: {accepted_code_rate: 9}
+
+Checker options can be set also for specific file pattern. In this example python modules under `tests/` directory will be checked by `pylint` with accepted code rate 8. Rest of python modules will be checkek by `pep8` and `pylint` with accepted code rate 9.
+
+.. code-block:: yaml
+
+   project-checkers: [unittest]
+   file-checkers:
+     '*.py': [pylint, pep8]
+     'tests/*.py':
+       - pylint: {rcfile: tests/pylintrc}
+
+This shows how to set other pylintrc for tests modules
+
+How to set jshint rc file:
+
+.. code-block:: yaml
+
+   file-checkers:
+     '*.js': [jshint]
+   config:
+     jshint: {'command-options': '--config .jshintrc'}
+
 
 See `Currently supported checkers`_
 
@@ -72,62 +117,9 @@ Git hooks setup
 ---------------
 
 1. Change current working directory to git repository `cd /path/to/repository`
-2. Execute `setup-githooks`. This command creates pre-commit hook which run `precommit_checker.py` before commit
+2. Execute `setup-githooks`. This command creates pre-commit hook which run `precommit-checkers.yml`
 
 .. note::
 
-   Make sure that every requirement of checkers (pylint, pep8 etc.) are installed in your system or active virtual environment.
+   Make sure that every requirement of checkers (pylint, pep8, jshint etc.) are installed in your system or active virtual environment.
    You should install them manually.
-
-Customization
--------------
-
-To customize pre-commit checking edit `precommit_checker.py`.
-
-Currently supported checkers
-----------------------------
-
-**ExitCodeChecker**:
-
-:Description:
-  Run system shell command and fail if exit code is non 0
-
-*Usage*:
-Create ``ExitCodeChecker`` object with arguments:
-
-1. command to execute (string)
-2. task name displayed before result in console
-
-.. code:: python
-
-  # ...
-  from checker import ExitCodeChecker
-  # ...
-  jobs = []
-  # ...
-  jobs.append(ExitCodeChecker('python3 -m unittest discover .',
-                              'python unittest'))
-
-*Example result:*
-  ``* python unittest: OK``
-
-**pylint**:
-
-:Description:
-  Check passes if pylint code rate for particular file is greather or equal to accepted code rate.
-  Accepted code rate is 
-
-:Requirements:
-  pylint
-
-*Usage*:
-
-.. code:: python
-
-  # ...
-  from checker import PylintChecker
-  # ...
-  ACCEPTED_PYLINT_RATE = 9
-  jobs = []
-  # ...
-  jobs.append(PylintChecker(file_name, ACCEPTED_PYLINT_RATE))
