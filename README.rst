@@ -7,7 +7,7 @@ Intro
 This app does any number of checks such as unittests or lint during pre-commit check.
 If at least one check will not pass, commit is aborted.
 
-Checkers can be also run by command `check-code`
+Checkers can be also run by command `check-code`.
 
 Checkers are treated as jobs divided among couple of workers.
 Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process (on separate cpu core).
