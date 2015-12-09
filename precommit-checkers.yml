@@ -3,4 +3,5 @@ file-checkers:
   '*.py': [pylint, pep8]
   'tests/*.py':
     - pylint: {rcfile: tests/pylintrc}
-config: {pylint: {accepted_code_rate: 9}}
+config: 
+  pylint: {accepted_code_rate: 9}
