@@ -14,10 +14,10 @@ from codechecker.checker.builder import (CheckListBuilder,
 
 def main():
     checklist_builder = CheckListBuilder()
-    checklist_builder.register_projectchecker(
+    checklist_builder.register_projectcheckers(
         _PROJECT_CHECKER_CREATORS
     )
-    checklist_builder.register_filechecker(
+    checklist_builder.register_filecheckers(
         _FILE_CHECKER_CREATORS
     )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
@@ -29,35 +29,47 @@ def main():
     checkers_config = checkers_data['config'] \
         if 'config' in checkers_data else {}
 
-    for each_checkername, each_checkerconf in checkers_config.items():
-        checklist_builder.set_checker_config(each_checkername,
-                                             each_checkerconf)
-
-    # Create project checkers
-    for each_checkername in project_checkers:
-        checklist_builder.add_project_checker(each_checkername)
-
-    # Create checkers for staged files
-    staged_files = git.get_staged_files()
-    files_already_matched = set()
-    patterns_sorted = sort_file_patterns(file_checkers.keys())
-    for path_pattern in patterns_sorted:
-        checkers_list = file_checkers[path_pattern]
-        matched_files = set(fnmatch.filter(staged_files, path_pattern))
-        matched_files -= files_already_matched
-        files_already_matched.update(matched_files)
-        for each_file in matched_files:
-            checklist_builder.add_all_filecheckers(each_file, checkers_list)
+    _set_checkers_config(checklist_builder, checkers_config)
+    _create_project_checkers(checklist_builder, project_checkers)
+    _create_file_checkers(checklist_builder, file_checkers)
 
     # Execute checkers
-    result_checkers = checklist_builder.get_checker_tasks()
-    if job_processor.process_jobs(result_checkers):
+    checker_tasks = checklist_builder.get_checker_tasks()
+    if job_processor.process_jobs(checker_tasks):
         sys.exit(1)
     else:
         return 0
 
 
-def sort_file_patterns(pattern_list):
+def _set_checkers_config(checklist_builder, config):
+    """Configure checker factories"""
+    for each_checker, each_conf in config.items():
+        checklist_builder.set_checker_config(each_checker,
+                                             each_conf)
+
+
+def _create_project_checkers(checklist_builder, checkers):
+    """Create project checkers"""
+    for each_checker in checkers:
+        checklist_builder.add_project_checker(each_checker)
+
+
+def _create_file_checkers(checklist_builder, checkers):
+    """Create file checkers"""
+    staged_files = git.get_staged_files()
+    files_already_matched = set()
+    patterns_sorted = _sort_file_patterns(checkers.keys())
+    for path_pattern in patterns_sorted:
+        checkers_list = checkers[path_pattern]
+        matched_files = set(fnmatch.filter(staged_files, path_pattern))
+        # Exclude files that match more specific pattern
+        matched_files -= files_already_matched
+        files_already_matched.update(matched_files)
+        for each_file in matched_files:
+            checklist_builder.add_all_filecheckers(each_file, checkers_list)
+
+
+def _sort_file_patterns(pattern_list):
     """Sort file patterns
 
     Sort file patterns so that more specific patterns are before more generic

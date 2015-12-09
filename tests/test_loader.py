@@ -136,13 +136,6 @@ class LoaderTestCase(TestCase):
             UnOrderedCollectionMatcher(expected_checkers)
         )
 
-    def test_sort_file_patterns(self):
-        unsorted_patterns = ['*.py', 'tests/*.py']
-        sorted_patterns = ['tests/*.py', '*.py']
-
-        self.assertEqual(sorted_patterns,
-                         loader.sort_file_patterns(unsorted_patterns))
-
     def test_file_checker_can_be_run_with_custom_config(self):
         accepted_code_rate = 8
         precommit_yaml_contents = yaml.dump({
