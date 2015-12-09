@@ -47,6 +47,7 @@ def get_staged_files():
     """Return files in git staging area"""
     def normpath(file_relpath):
         """Get absolute path"""
+        return file_relpath
         return path.join(repository_path, file_relpath)
     repository_path = find_repository_dir(os.getcwd())
     git_args = 'git diff --staged --name-only'.split()

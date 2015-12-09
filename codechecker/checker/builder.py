@@ -103,12 +103,12 @@ class CheckerFactory:
             raise InvalidConfigOption(msg)
 
     def _mixin_config(self, config):
-        """Join config set in factory with passed one
+        """Join factory config with passed one
 
-        Join config set in factory with passed one and return result"""
+        Join factory config with passed one and return result"""
         if not config:
             return copy.copy(self.config)
-        result_config = {}
+        result_config = copy.copy(self.config)
         for option_name, option_value in config.items():
             if option_name not in self.config:
                 msg = '"{}" is not valid option for "{}"' \
@@ -122,7 +122,8 @@ class PylintCheckerFactory(CheckerFactory):
     """Create :py:class:`PylintChecker`"""
 
     default_config = {
-        'accepted_code_rate': 9
+        'accepted_code_rate': 9,
+        'rcfile': None
     }
 
     def create_for_file(self, file_path, config=None):
@@ -131,6 +132,8 @@ class PylintCheckerFactory(CheckerFactory):
         accepted_code_rate = config['accepted_code_rate']
         abspath = git.abspath(file_path)
         checker = PylintChecker(file_path, abspath, accepted_code_rate)
+        if config['rcfile']:
+            checker.rcfile = config['rcfile']
         return checker
 
 

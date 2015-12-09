@@ -43,10 +43,10 @@ class PylintChecker:
         :param accepted_code_rate: minimal accepted code rate
         :type accepted_code_rate: integer or float
         """
-        if abspath:
-            self.abspath = abspath
+        self.abspath = abspath
         self.file_name = filename
         self.accepted_code_rate = accepted_code_rate
+        self.rcfile = None
 
     def __call__(self):
         pylint_args = self.get_command().split()
@@ -76,7 +76,13 @@ class PylintChecker:
 
     def get_command(self):
         """Get command line command"""
-        return 'pylint -f parseable {}'.format(self.abspath)
+        options = []
+        if self.rcfile:
+            options.append('--rcfile={}'.format(self.rcfile))
+        return 'pylint -f parseable {abspath} {options}'.format(
+            abspath=self.abspath,
+            options=' '.join(options)
+        )
 
     def get_taskname(self):
         """Get task name"""

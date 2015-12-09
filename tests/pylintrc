@@ -1,0 +1,9 @@
+[BASIC]
+
+# Regular expression matching correct method names
+method-rgx=([a-z_][a-z0-9_]{2,30})|([a-zA-Z0-9_]{5})|(test_[a-z_][a-z0-9_]{2,65})$
+
+[DESIGN]
+
+# Minimum number of public methods for a class (see R0903).
+min-public-methods=2

@@ -172,6 +172,27 @@ class LoaderTestCase(TestCase):
         }
         self.assert_pylint_checkers_executed(staged_files, accepted_code_rate)
 
+    def test_pylintfactory_sets_additional_command_options_to_checker(self):
+        precommit_yaml_contents = yaml.dump({
+            'file-checkers': {
+                'tests/*.py': [{'pylint': {'rcfile': 'tests/pylintrc'}}]
+            }
+        })
+        staged_files = ['tests/module.py']
+        self.setup_git_repository(precommit_yaml_contents, staged_files)
+
+        loader.main()
+
+        expected_checker = PylintChecker(
+            filename='tests/module.py',
+            abspath=path.join(self.repo_root, 'tests/module.py'),
+            accepted_code_rate=_get_default_acceptedcoderate()
+        )
+        expected_checker.rcfile = 'tests/pylintrc'
+        self.job_processor.process_jobs.assert_called_once_with(
+            UnOrderedCollectionMatcher([expected_checker])
+        )
+
     def test_script_exit_status_is_1_if_checker_fail(self):
         """If checker fail script should exit with code 1"""
         self.job_processor.process_jobs.return_value = 1
@@ -268,7 +289,7 @@ def _compare_pylint_checker(expected, actual):
 
 def _compare_exitcode_checker(expected, actual):
     """Check if two ExitCodeChecker objects are equal"""
-    # pylint: disable=W0212
+    # pylint: disable=protected-access
     return isinstance(expected, ExitCodeChecker) and \
         isinstance(actual, ExitCodeChecker) and \
         expected._command == actual._command and \
