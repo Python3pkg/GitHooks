@@ -106,7 +106,7 @@ def _sort_file_patterns(pattern_list):
 
 def _get_projectcheckers_creators():
     return {
-        'unittest': lambda: ExitCodeChecker('python3 -m unittest discover .',
+        'unittest': lambda: ExitCodeChecker('python -m unittest discover .',
                                             'python unittest')
     }
 

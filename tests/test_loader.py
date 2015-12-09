@@ -39,7 +39,7 @@ class LoaderTestCase(TestCase):
 
         loader.main()
 
-        expected_command = 'python3 -m unittest discover .'
+        expected_command = 'python -m unittest discover .'
         expected_task_name = 'python unittest'
         expected = UnOrderedCollectionMatcher(
             [ExitCodeChecker(expected_command, expected_task_name)]
