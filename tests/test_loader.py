@@ -262,7 +262,8 @@ def _compare_pylint_checker(expected, actual):
     return isinstance(expected, PylintChecker) and \
         isinstance(actual, PylintChecker) and \
         expected.get_command() == actual.get_command() and \
-        expected.get_taskname() == actual.get_taskname()
+        expected.get_taskname() == actual.get_taskname() and \
+        expected.accepted_code_rate == actual.accepted_code_rate
 
 
 def _compare_exitcode_checker(expected, actual):

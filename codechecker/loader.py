@@ -15,10 +15,10 @@ from codechecker.checker.builder import (CheckListBuilder,
 def main():
     checklist_builder = CheckListBuilder()
     checklist_builder.register_projectcheckers(
-        _PROJECT_CHECKER_CREATORS
+        _get_projectcheckers_creators()
     )
     checklist_builder.register_filecheckers(
-        _FILE_CHECKER_CREATORS
+        _get_file_checker_creators()
     )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
 
@@ -93,15 +93,18 @@ def _sort_file_patterns(pattern_list):
     return patterns_sorted
 
 
-_PROJECT_CHECKER_CREATORS = {
-    'unittest': lambda: ExitCodeChecker('python3 -m unittest discover .',
-                                        'python unittest')
-}
+def _get_projectcheckers_creators():
+    return {
+        'unittest': lambda: ExitCodeChecker('python3 -m unittest discover .',
+                                            'python unittest')
+    }
 
 
-_FILE_CHECKER_CREATORS = {
-    'pep8': ExitCodeFileCheckerFactory('pep8 $file_path', 'PEP8 $file_path'),
-    'pylint': PylintCheckerFactory(),
-    'jshint': ExitCodeFileCheckerFactory('jshint $options $file_path',
-                                         'JSHint $file_path')
-}
+def _get_file_checker_creators():
+    return {
+        'pep8': ExitCodeFileCheckerFactory('pep8 $file_path',
+                                           'PEP8 $file_path'),
+        'pylint': PylintCheckerFactory(),
+        'jshint': ExitCodeFileCheckerFactory('jshint $options $file_path',
+                                             'JSHint $file_path')
+    }
