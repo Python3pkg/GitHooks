@@ -22,16 +22,20 @@ def main():
     )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
 
-    project_checkers = checkers_data['project-checkers'] \
-        if 'project-checkers' in checkers_data else []
-    file_checkers = checkers_data['file-checkers'] \
-        if 'file-checkers' in checkers_data else {}
-    checkers_config = checkers_data['config'] \
-        if 'config' in checkers_data else {}
+    # Check if precommit-checkers.yml contains valid options only
+    for each_option in checkers_data:
+        if each_option not in ('config', 'project-checkers', 'file-checkers'):
+            raise ValueError('precommit-checkers.yml contains'
+                             ' invalid option "{}"'.format(each_option))
 
-    _set_checkers_config(checklist_builder, checkers_config)
-    _create_project_checkers(checklist_builder, project_checkers)
-    _create_file_checkers(checklist_builder, file_checkers)
+    if 'config' in checkers_data:
+        _set_checkers_config(checklist_builder, checkers_data['config'])
+    if 'project-checkers' in checkers_data:
+        _create_project_checkers(checklist_builder, 
+                                 checkers_data['project-checkers'])
+    if 'file-checkers' in checkers_data:
+        _create_file_checkers(checklist_builder,
+                              checkers_data['file-checkers'])
 
     # Execute checkers
     checker_tasks = checklist_builder.get_checker_tasks()
