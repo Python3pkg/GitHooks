@@ -37,12 +37,12 @@ class CheckListBuilder:
         then its key is checker name and value is checker config.
         """
         if isinstance(checker_data, dict):
-            checker_type = next(iter(checker_data))
-            config = checker_data[checker_type]
+            checkername = next(iter(checker_data))
+            config = checker_data[checkername]
         else:
-            checker_type = checker_data
+            checkername = checker_data
             config = None
-        factory = self._get_filechecker_factory(checker_type)
+        factory = self._get_filechecker_factory(checkername)
         return factory.create_for_file(file_path, config)
 
     def set_checker_config(self, name, config):

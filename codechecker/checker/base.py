@@ -7,6 +7,7 @@ return :py:class:`CheckResult` object.
 import sys
 import re
 from subprocess import Popen, PIPE
+from shlex import split
 
 
 class CheckResult:
@@ -49,7 +50,7 @@ class PylintChecker:
         self.rcfile = None
 
     def __call__(self):
-        pylint_args = self.get_command().split()
+        pylint_args = split(self.get_command())
         pylint_process = Popen(pylint_args, stdout=PIPE, stderr=PIPE)
         pylint_process.wait()
         pylint_output = pylint_process.stdout.read()\
@@ -115,7 +116,7 @@ class ExitCodeChecker:
         self._task_name = task_name
 
     def __call__(self):
-        args = self._command.split()
+        args = split(self._command)
         process = Popen(args, stdout=PIPE, stderr=PIPE)
         returncode = process.wait()
         result = CheckResult(self._task_name)
