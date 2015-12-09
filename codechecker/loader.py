@@ -1,8 +1,10 @@
-"""Load checkers from yaml file"""
+"""Module responsible for loading checkers
+
+see :py:func:`codechecker.loader.main`"""
 import sys
+import fnmatch
 
 import yaml
-import fnmatch
 
 from codechecker import job_processor
 from codechecker import git
@@ -13,12 +15,21 @@ from codechecker.checker.builder import (CheckListBuilder,
 
 
 def main():
+    """Load checkers
+
+    1. Load checkers configuration from precommit-checkers.yml
+    2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
+        list of all configured checkers for project and staged files
+    3. Next call :py:func:`codechecker.job_processor.process_jobs` to execute
+        created checker tasks and print checkers result
+    4. If :py:func:`codechecker.job_processor.process_jobs` return non empty
+        value script exits with status 1 so commit is aborted"""
     checklist_builder = CheckListBuilder()
     checklist_builder.register_projectcheckers(
         _get_projectcheckers_creators()
     )
     checklist_builder.register_filecheckers(
-        _get_file_checker_creators()
+        _get_filechecker_creators()
     )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
 
@@ -100,7 +111,7 @@ def _get_projectcheckers_creators():
     }
 
 
-def _get_file_checker_creators():
+def _get_filechecker_creators():
     return {
         'pep8': ExitCodeFileCheckerFactory('pep8 $file_path',
                                            'PEP8 $file_path'),

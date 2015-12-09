@@ -1,5 +1,6 @@
-# pylint: disable=E1101
-"""Exports:
+"""Module responsible for executing checker tasks
+
+Exports:
     :py:func:`process_jobs` - Execute jobs
 """
 import multiprocessing as mp
