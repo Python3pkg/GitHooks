@@ -122,10 +122,8 @@ class LoaderTestCase(TestCase):
 
         expected_pylintchecker = PylintChecker(
             'module.py',
+            path.join(self.repo_root, 'module.py'),
             _get_default_acceptedcoderate()
-        )
-        expected_pylintchecker.set_abspath(
-            path.join(self.repo_root, 'module.py')
         )
         expected_pep8_checker = ExitCodeChecker(
             'pep8 {}'.format(path.join(self.repo_root, 'tests/module2.py')),
@@ -242,8 +240,12 @@ class LoaderTestCase(TestCase):
         expected_checkers = []
         for each_file in files:
             each_accepted_coderate = all_accepted_coderate[each_file]
-            each_checker = PylintChecker(each_file, each_accepted_coderate)
-            each_checker.set_abspath(path.join(self.repo_root, each_file))
+            each_abspath = path.join(self.repo_root, each_file)
+            each_checker = PylintChecker(
+                filename=each_file,
+                abspath=each_abspath,
+                accepted_code_rate=each_accepted_coderate
+            )
             expected_checkers.append(each_checker)
         self.job_processor.process_jobs.assert_called_once_with(
             UnOrderedCollectionMatcher(expected_checkers)

@@ -24,23 +24,7 @@ class CheckResult:
         self.message = ''
 
 
-class _SingleFileChecker:
-    """Base class for checkers which checks single file"""
-
-    def __init__(self, file_name):
-        """Set file to be checked
-
-        :param file_name: path to file
-        :type file_name: string
-        """
-        self.file_name = file_name
-        self.abspath = file_name
-
-    def set_abspath(self, abspath):
-        self.abspath = abspath
-
-
-class PylintChecker(_SingleFileChecker):
+class PylintChecker:
     """Checks pylint code rate
 
     Checks file passed to constructor. Result is success if code has been rated
@@ -51,13 +35,17 @@ class PylintChecker(_SingleFileChecker):
     RE_PYLINT_MESSAGE = re.compile(
         r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
 
-    def __init__(self, file_name, accepted_code_rate):
+    def __init__(self, filename, abspath, accepted_code_rate):
         """Set file path and accepted code rate
 
+        :param filename: path to file relative to git repository root
+        :type filename: string
         :param accepted_code_rate: minimal accepted code rate
         :type accepted_code_rate: integer or float
         """
-        super(PylintChecker, self).__init__(file_name)
+        if abspath:
+            self.abspath = abspath
+        self.file_name = filename
         self.accepted_code_rate = accepted_code_rate
 
     def __call__(self):

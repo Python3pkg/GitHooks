@@ -129,8 +129,8 @@ class PylintCheckerFactory(CheckerFactory):
         """Create pylint checker for passed file"""
         config = self._mixin_config(config)
         accepted_code_rate = config['accepted_code_rate']
-        checker = PylintChecker(file_path, accepted_code_rate)
-        checker.set_abspath(git.abspath(file_path))
+        abspath = git.abspath(file_path)
+        checker = PylintChecker(file_path, abspath, accepted_code_rate)
         return checker
 
 

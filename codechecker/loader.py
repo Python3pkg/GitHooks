@@ -31,7 +31,7 @@ def main():
     if 'config' in checkers_data:
         _set_checkers_config(checklist_builder, checkers_data['config'])
     if 'project-checkers' in checkers_data:
-        _create_project_checkers(checklist_builder, 
+        _create_project_checkers(checklist_builder,
                                  checkers_data['project-checkers'])
     if 'file-checkers' in checkers_data:
         _create_file_checkers(checklist_builder,
