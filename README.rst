@@ -2,6 +2,7 @@ code-checker
 ============
 
 Intro
+-----
 
 This app does any number of checks such as unittests or lint during pre-commit check.
 If at least one check will not pass, commit is aborted.
@@ -14,9 +15,6 @@ Number of workers is equal to number of your cpu logical cores, every worker is 
 .. image:: https://cloud.githubusercontent.com/assets/898669/10948860/0dcede00-8330-11e5-8b14-5490c4a00d57.png
 
 .. image:: https://cloud.githubusercontent.com/assets/898669/10948864/16ba38b6-8330-11e5-85b8-02bb0332105b.png
-
-To use *code-checker* in your project execute command `setup-githook`. This command
-creates git pre-commit hook (.git/hooks/pre-commit) and `precommit-checkers.yml`.
 
 In `precommit-checkers.yml` you can configure which checkers checks which files and define checkers configuration. 
 
@@ -36,8 +34,8 @@ Currently supported checkers are:
 
 In near future more checkers will be added, especially for php and js.
 
-Examples
---------
+precommit-checkers.yml Examples
+-------------------------------
 
 .. code-block:: yaml
 
@@ -116,8 +114,9 @@ Uninstallation
 Git hooks setup
 ---------------
 
-1. Change current working directory to git repository `cd /path/to/repository`
-2. Execute `setup-githooks`. This command creates pre-commit hook which run `precommit-checkers.yml`
+#. Install `code-checker` `Installation`_
+#. Change current working directory to git repository `cd /path/to/repository`
+#. Execute `setup-githooks`. This command creates pre-commit hook which run checkers defined in `precommit-checkers.yml`
 
 .. note::
 
