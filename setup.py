@@ -31,7 +31,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'check-code = codechecker.loader:main'
+            'check-code = codechecker.loader:main',
+            'setup-githook = codechecker.setup:main'
         ],
     }
 )
