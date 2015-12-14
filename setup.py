@@ -1,7 +1,10 @@
 # pylint: disable=C0111
 # pylint: disable=C0103
 from setuptools import setup
+from setuptools import find_packages
 from os import path
+
+packages = find_packages(exclude=['tests*'])
 
 project_dir = path.abspath(path.dirname(__file__))
 with open(path.join(project_dir, 'README.rst'), encoding='utf-8') as f:
@@ -9,7 +12,7 @@ with open(path.join(project_dir, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='code-checker',
-    version='0.2.0',
+    version='0.2.0-1',
     description='Run pre-commit code checkers',
     long_description=long_description,
     url='https://github.com/droslaw/GitHooks',
@@ -27,7 +30,8 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Software Development :: Quality Assurance'
     ],
-    packages=['codechecker'],
+    install_requires=['PyYAML'],
+    packages=packages,
     include_package_data=True,
     entry_points={
         'console_scripts': [
