@@ -28,9 +28,14 @@ Currently supported checkers are:
 
 - unittest:
    python unittest runner
-- pylint
-- pep8
-- jshint
+- pylint:
+   fail if pylint code rate is below `accepted_code_rate`
+- pep8:
+   fail if pep8 show any message
+- pep257:
+   fail if pep257 show any message
+- jshint:
+   fail if jshint show any message
 
 In near future more checkers will be added, especially for php and js.
 

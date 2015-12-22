@@ -1,6 +1,7 @@
-"""Module responsible for loading checkers
+"""Module responsible for loading checkers.
 
-see :py:func:`codechecker.loader.main`"""
+see :py:func:`codechecker.loader.main`
+"""
 import sys
 import fnmatch
 
@@ -15,7 +16,7 @@ from codechecker.checker.builder import (CheckListBuilder,
 
 
 def main():
-    """Load checkers
+    """Load checkers.
 
     1. Load checkers configuration from precommit-checkers.yml
     2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
@@ -23,7 +24,8 @@ def main():
     3. Next call :py:func:`codechecker.job_processor.process_jobs` to execute
         created checker tasks and print checkers result
     4. If :py:func:`codechecker.job_processor.process_jobs` return non empty
-        value script exits with status 1 so commit is aborted"""
+        value script exits with status 1 so commit is aborted
+    """
     checklist_builder = CheckListBuilder()
     checklist_builder.register_projectcheckers(
         _get_projectcheckers_creators()
@@ -57,20 +59,20 @@ def main():
 
 
 def _set_checkers_config(checklist_builder, config):
-    """Configure checker factories"""
+    """Configure checker factories."""
     for each_checker, each_conf in config.items():
         checklist_builder.set_checker_config(each_checker,
                                              each_conf)
 
 
 def _create_project_checkers(checklist_builder, checkers):
-    """Create project checkers"""
+    """Create project checkers."""
     for each_checker in checkers:
         checklist_builder.add_project_checker(each_checker)
 
 
 def _create_file_checkers(checklist_builder, checkers):
-    """Create file checkers"""
+    """Create file checkers."""
     staged_files = git.get_staged_files()
     files_already_matched = set()
     patterns_sorted = _sort_file_patterns(checkers.keys())
@@ -85,11 +87,12 @@ def _create_file_checkers(checklist_builder, checkers):
 
 
 def _sort_file_patterns(pattern_list):
-    """Sort file patterns
+    """Sort file patterns.
 
     Sort file patterns so that more specific patterns are before more generic
     patterns. For example if we have patterns ['*.py', 'tests/*.py'] result
-    should be ['tests/*.py', '*.py']"""
+    should be ['tests/*.py', '*.py']
+    """
     patterns_sorted = []
     for pattern_to_insert in pattern_list:
         for index, pattern_inserted in enumerate(patterns_sorted):
@@ -116,6 +119,8 @@ def _get_filechecker_creators():
         'pep8': ExitCodeFileCheckerFactory('pep8 $file_path',
                                            'PEP8 $file_path'),
         'pylint': PylintCheckerFactory(),
+        'pep257': ExitCodeFileCheckerFactory('pep257 $file_path',
+                                             'PEP 257 $file_path'),
         'jshint': ExitCodeFileCheckerFactory('jshint $options $file_path',
                                              'JSHint $file_path')
     }

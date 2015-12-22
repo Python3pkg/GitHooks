@@ -1,6 +1,6 @@
 project-checkers: [unittest]
 file-checkers:
-  '*.py': [pylint, pep8]
+  '*.py': [pylint, pep8, pep257]
   'tests/*.py':
     - pylint: {rcfile: tests/pylintrc}
 config: 
