@@ -16,7 +16,7 @@ from codechecker.checker.builder import (CheckListBuilder,
 
 
 def main():
-    """Load checkers.
+    """Run checkers.
 
     1. Load checkers configuration from precommit-checkers.yml
     2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
@@ -26,21 +26,9 @@ def main():
     4. If :py:func:`codechecker.job_processor.process_jobs` return non empty
         value script exits with status 1 so commit is aborted
     """
-    checklist_builder = CheckListBuilder()
-    checklist_builder.register_projectcheckers(
-        _get_projectcheckers_creators()
-    )
-    checklist_builder.register_filecheckers(
-        _get_filechecker_creators()
-    )
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
-
-    # Check if precommit-checkers.yml contains valid options only
-    for each_option in checkers_data:
-        if each_option not in ('config', 'project-checkers', 'file-checkers'):
-            raise ValueError('precommit-checkers.yml contains'
-                             ' invalid option "{}"'.format(each_option))
-
+    _validate_checkers_data(checkers_data)
+    checklist_builder = _init_checkers_builder()
     if 'config' in checkers_data:
         _set_checkers_config(checklist_builder, checkers_data['config'])
     if 'project-checkers' in checkers_data:
@@ -50,12 +38,27 @@ def main():
         _create_file_checkers(checklist_builder,
                               checkers_data['file-checkers'])
 
-    # Execute checkers
     checker_tasks = checklist_builder.get_checker_tasks()
-    if job_processor.process_jobs(checker_tasks):
-        sys.exit(1)
-    else:
-        return 0
+    return _execute_checkers(checker_tasks)
+
+
+def _init_checkers_builder():
+    checklist_builder = CheckListBuilder()
+    checklist_builder.register_projectcheckers(
+        _get_projectcheckers_creators()
+    )
+    checklist_builder.register_filecheckers(
+        _get_filechecker_creators()
+    )
+    return checklist_builder
+
+
+def _validate_checkers_data(checkers_data):
+    """Check if precommit-checkers.yml contains valid options only."""
+    for each_option in checkers_data:
+        if each_option not in ('config', 'project-checkers', 'file-checkers'):
+            raise ValueError('precommit-checkers.yml contains'
+                             ' invalid option "{}"'.format(each_option))
 
 
 def _set_checkers_config(checklist_builder, config):
@@ -74,16 +77,23 @@ def _create_project_checkers(checklist_builder, checkers):
 def _create_file_checkers(checklist_builder, checkers):
     """Create file checkers."""
     staged_files = git.get_staged_files()
-    files_already_matched = set()
+    files_previously_matched = set()
     patterns_sorted = _sort_file_patterns(checkers.keys())
     for path_pattern in patterns_sorted:
         checkers_list = checkers[path_pattern]
         matched_files = set(fnmatch.filter(staged_files, path_pattern))
         # Exclude files that match more specific pattern
-        matched_files -= files_already_matched
-        files_already_matched.update(matched_files)
-        for each_file in matched_files:
+        files_to_check = matched_files - files_previously_matched
+        files_previously_matched.update(files_to_check)
+        for each_file in files_to_check:
             checklist_builder.add_all_filecheckers(each_file, checkers_list)
+
+
+def _execute_checkers(checker_tasks):
+    if job_processor.process_jobs(checker_tasks):
+        sys.exit(1)
+    else:
+        return 0
 
 
 def _sort_file_patterns(pattern_list):
@@ -102,7 +112,7 @@ def _sort_file_patterns(pattern_list):
                 patterns_sorted.insert(index, pattern_to_insert)
                 break
         else:
-            # there is no more generic patterns in result list
+            # there is not more generic patterns in result list
             patterns_sorted.append(pattern_to_insert)
     return patterns_sorted
 
