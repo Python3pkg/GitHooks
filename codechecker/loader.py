@@ -38,16 +38,13 @@ def main():
         _create_file_checkers(checklist_builder,
                               checkers_data['file-checkers'])
 
-    checker_tasks = checklist_builder.get_checker_tasks()
+    checker_tasks = checklist_builder.get_result()
     return _execute_checkers(checker_tasks)
 
 
 def _init_checkers_builder():
-    checklist_builder = CheckListBuilder()
-    checklist_builder.register_projectcheckers(
-        _get_projectcheckers_creators()
-    )
-    checklist_builder.register_filecheckers(
+    checklist_builder = CheckListBuilder(
+        _get_projectcheckers_creators(),
         _get_filechecker_creators()
     )
     return checklist_builder
@@ -64,8 +61,8 @@ def _validate_checkers_data(checkers_data):
 def _set_checkers_config(checklist_builder, config):
     """Configure checker factories."""
     for each_checker, each_conf in config.items():
-        checklist_builder.set_checker_config(each_checker,
-                                             each_conf)
+        checklist_builder.configure_checker(each_checker,
+                                            each_conf)
 
 
 def _create_project_checkers(checklist_builder, checkers):
@@ -86,7 +83,7 @@ def _create_file_checkers(checklist_builder, checkers):
         files_to_check = matched_files - files_previously_matched
         files_previously_matched.update(files_to_check)
         for each_file in files_to_check:
-            checklist_builder.add_all_filecheckers(each_file, checkers_list)
+            checklist_builder.add_checkers_for_file(each_file, checkers_list)
 
 
 def _execute_checkers(checker_tasks):
@@ -126,11 +123,11 @@ def _get_projectcheckers_creators():
 
 def _get_filechecker_creators():
     return {
-        'pep8': ExitCodeFileCheckerFactory('pep8 $file_path',
-                                           'PEP8 $file_path'),
+        'pep8': ExitCodeFileCheckerFactory('pep8 ${file_path}',
+                                           'PEP8 ${file_path}'),
         'pylint': PylintCheckerFactory(),
-        'pep257': ExitCodeFileCheckerFactory('pep257 $file_path',
-                                             'PEP 257 $file_path'),
-        'jshint': ExitCodeFileCheckerFactory('jshint $options $file_path',
-                                             'JSHint $file_path')
+        'pep257': ExitCodeFileCheckerFactory('pep257 ${file_path} ${options}',
+                                             'PEP 257 ${file_path}'),
+        'jshint': ExitCodeFileCheckerFactory('jshint ${options} ${file_path}',
+                                             'JSHint ${file_path}')
     }
