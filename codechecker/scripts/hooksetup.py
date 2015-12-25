@@ -1,11 +1,11 @@
-"""Setup git pre-commit hooks in repository"""
+"""Setup git pre-commit hooks in repository."""
 import os
 import stat
 from codechecker import git
 
 
 def main():
-    """Create pre-commit hook and checkers config
+    """Create pre-commit hook and checkers config.
 
     - Create pre-commit hook, if pre-commit hook already exists raise exception
     - Create precommit-checkers.yml if does not exists yet

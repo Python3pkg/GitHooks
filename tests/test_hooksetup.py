@@ -3,10 +3,10 @@ import os
 from os import path
 from tests.testcase import TestCase
 
-from codechecker import setup
+from codechecker.scripts import hooksetup as setup
 
 
-class TestSetup(TestCase):
+class TestHookSetup(TestCase):
     """Test installation of pre-commit hook"""
     def setUp(self):
         self.setUpPyfakefs()
