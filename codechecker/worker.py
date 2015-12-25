@@ -1,8 +1,8 @@
-"""Module responsible for executing checker tasks.
+"""Execute checkers tasks.
 
 Exports:
 
-- :py:func:`execute_checkers` - Execute jobs
+- :py:func:`execute_checkers` - Execute checkers
 """
 import multiprocessing as mp
 

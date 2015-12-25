@@ -7,7 +7,7 @@ import fnmatch
 
 import yaml
 
-from codechecker import job_processor
+from codechecker import worker
 from codechecker import git
 from codechecker.checker.builder import CheckListBuilder
 from codechecker.concrete_checkers import (get_projectcheckers,
@@ -22,10 +22,10 @@ def main():
     2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
     list of all configured checkers for project and staged files
 
-    3. Next call :py:func:`codechecker.job_processor.execute_checkers` to
+    3. Next call :py:func:`codechecker.worker.execute_checkers` to
     execute created checker tasks and print checkers result
 
-    4. If :py:func:`codechecker.job_processor.execute_checkers` return non
+    4. If :py:func:`codechecker.worker.execute_checkers` return non
     empty value script exits with status 1 so commit is aborted
     """
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
@@ -87,7 +87,7 @@ def _create_file_checkers(checklist_builder, checkers):
 
 
 def _execute_checkers(checker_tasks):
-    if job_processor.execute_checkers(checker_tasks):
+    if worker.execute_checkers(checker_tasks):
         sys.exit(1)
     else:
         return 0

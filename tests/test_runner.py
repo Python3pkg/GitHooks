@@ -25,13 +25,13 @@ class RunnerTestCase(TestCase):
         self.setUpPyfakefs()
         self.repo_root = '/path/to/repository'
 
-        job_processor_patcher = mock.patch(
-            'codechecker.scripts.runner.job_processor',
+        worker_patcher = mock.patch(
+            'codechecker.scripts.runner.worker',
             autospec=True
         )
-        self.addCleanup(job_processor_patcher.stop)
-        self.job_processor = job_processor_patcher.start()
-        self.job_processor.execute_checkers.return_value = 0
+        self.addCleanup(worker_patcher.stop)
+        self.worker = worker_patcher.start()
+        self.worker.execute_checkers.return_value = 0
 
     def test_runner_unittest_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
@@ -47,7 +47,7 @@ class RunnerTestCase(TestCase):
         expected = UnOrderedCollectionMatcher(
             [ExitCodeChecker(expected_command, expected_task_name)]
         )
-        self.job_processor.execute_checkers.assert_called_once_with(expected)
+        self.worker.execute_checkers.assert_called_once_with(expected)
 
     def test_pep8_checker_is_created_for_every_stashed_file(self):
         """ExitCodeChecker can be created for staged files match pattern"""
@@ -69,7 +69,7 @@ class RunnerTestCase(TestCase):
                 ExitCodeChecker(command, task_name)
             )
         expected_checkers = UnOrderedCollectionMatcher(expected_checkers)
-        self.job_processor.execute_checkers \
+        self.worker.execute_checkers \
             .assert_called_once_with(expected_checkers)
 
     def test_ExitCodeCheckerFactory_accepts_config(self):
@@ -87,7 +87,7 @@ class RunnerTestCase(TestCase):
         expected_command = 'jshint --config .jshintrc' \
             ' /path/to/repository/module.js'
         expected_taskname = 'JSHint module.js'
-        self.job_processor.execute_checkers.assert_called_once_with(
+        self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher(
                 [ExitCodeChecker(expected_command, expected_taskname)]
             )
@@ -133,7 +133,7 @@ class RunnerTestCase(TestCase):
             'PEP8 {}'.format('tests/module2.py')
         )
         expected_checkers = [expected_pylintchecker, expected_pep8_checker]
-        self.job_processor.execute_checkers.assert_called_once_with(
+        self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher(expected_checkers)
         )
 
@@ -192,13 +192,13 @@ class RunnerTestCase(TestCase):
             accepted_code_rate=_get_default_acceptedcoderate()
         )
         expected_checker.rcfile = 'tests/pylintrc'
-        self.job_processor.execute_checkers.assert_called_once_with(
+        self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher([expected_checker])
         )
 
     def test_script_exit_status_is_1_if_checker_fail(self):
         """If checker fail script should exit with code 1"""
-        self.job_processor.execute_checkers.return_value = 1
+        self.worker.execute_checkers.return_value = 1
         precommit_yaml_contents = yaml.dump({
             'project-checkers': ['unittest']
         })
@@ -271,7 +271,7 @@ class RunnerTestCase(TestCase):
                 accepted_code_rate=each_accepted_coderate
             )
             expected_checkers.append(each_checker)
-        self.job_processor.execute_checkers.assert_called_once_with(
+        self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher(expected_checkers)
         )
 
