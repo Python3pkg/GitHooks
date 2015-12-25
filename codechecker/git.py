@@ -1,4 +1,12 @@
-"""Function for inspecting git repo."""
+"""Function for inspecting git repo.
+
+Exports:
+
+* :func:`find_repository_dir` - git repository main directory path
+* :func:`abspath` - get absolute path of file
+* :func:`get_staged_files` - get staged files
+* :exc:`GitRepoNotFoundError` - raised when git repository can not be found
+"""
 import os
 from os import path
 import sys
