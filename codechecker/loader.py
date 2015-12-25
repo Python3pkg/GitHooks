@@ -1,4 +1,4 @@
-"""Module responsible for loading checkers.
+"""Execute checkers defined in precommit-checkers.yml.
 
 see :py:func:`codechecker.loader.main`
 """
@@ -21,10 +21,10 @@ def main():
     1. Load checkers configuration from precommit-checkers.yml
     2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
         list of all configured checkers for project and staged files
-    3. Next call :py:func:`codechecker.job_processor.process_jobs` to execute
-        created checker tasks and print checkers result
-    4. If :py:func:`codechecker.job_processor.process_jobs` return non empty
-        value script exits with status 1 so commit is aborted
+    3. Next call :py:func:`codechecker.job_processor.execute_checkers` to
+        execute created checker tasks and print checkers result
+    4. If :py:func:`codechecker.job_processor.execute_checkers` return non
+        empty value script exits with status 1 so commit is aborted
     """
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
     _validate_checkers_data(checkers_data)
@@ -38,8 +38,7 @@ def main():
         _create_file_checkers(checklist_builder,
                               checkers_data['file-checkers'])
 
-    checker_tasks = checklist_builder.get_result()
-    return _execute_checkers(checker_tasks)
+    return _execute_checkers(checklist_builder.get_result())
 
 
 def _init_checkers_builder():
@@ -61,8 +60,7 @@ def _validate_checkers_data(checkers_data):
 def _set_checkers_config(checklist_builder, config):
     """Configure checker factories."""
     for each_checker, each_conf in config.items():
-        checklist_builder.configure_checker(each_checker,
-                                            each_conf)
+        checklist_builder.configure_checker(each_checker, each_conf)
 
 
 def _create_project_checkers(checklist_builder, checkers):
@@ -87,7 +85,7 @@ def _create_file_checkers(checklist_builder, checkers):
 
 
 def _execute_checkers(checker_tasks):
-    if job_processor.process_jobs(checker_tasks):
+    if job_processor.execute_checkers(checker_tasks):
         sys.exit(1)
     else:
         return 0
