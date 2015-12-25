@@ -9,6 +9,7 @@ from codechecker import loader
 from codechecker.checker.base import (ExitCodeChecker,
                                       PylintChecker)
 from codechecker import git
+from codechecker.checker.builder import PylintCheckerFactory
 from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
@@ -275,7 +276,7 @@ class LoaderTestCase(TestCase):
 
 def _get_default_acceptedcoderate():
     """Get accepted code rate from PylintChecker config"""
-    return loader.PylintCheckerFactory.default_config['accepted_code_rate']
+    return PylintCheckerFactory.default_config['accepted_code_rate']
 
 
 def _compare_pylint_checker(expected, actual):

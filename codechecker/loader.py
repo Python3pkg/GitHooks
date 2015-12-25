@@ -9,10 +9,9 @@ import yaml
 
 from codechecker import job_processor
 from codechecker import git
-from codechecker.checker.base import ExitCodeChecker
-from codechecker.checker.builder import (CheckListBuilder,
-                                         PylintCheckerFactory,
-                                         ExitCodeFileCheckerFactory)
+from codechecker.checker.builder import CheckListBuilder
+from codechecker.concrete_checkers import (get_projectcheckers,
+                                           get_filecheckers)
 
 
 def main():
@@ -43,8 +42,8 @@ def main():
 
 def _init_checkers_builder():
     checklist_builder = CheckListBuilder(
-        _get_projectcheckers_creators(),
-        _get_filechecker_creators()
+        get_projectcheckers(),
+        get_filecheckers()
     )
     return checklist_builder
 
@@ -110,22 +109,3 @@ def _sort_file_patterns(pattern_list):
             # there is not more generic patterns in result list
             patterns_sorted.append(pattern_to_insert)
     return patterns_sorted
-
-
-def _get_projectcheckers_creators():
-    return {
-        'unittest': lambda: ExitCodeChecker('python -m unittest discover .',
-                                            'python unittest')
-    }
-
-
-def _get_filechecker_creators():
-    return {
-        'pep8': ExitCodeFileCheckerFactory('pep8 ${file_path}',
-                                           'PEP8 ${file_path}'),
-        'pylint': PylintCheckerFactory(),
-        'pep257': ExitCodeFileCheckerFactory('pep257 ${file_path} ${options}',
-                                             'PEP 257 ${file_path}'),
-        'jshint': ExitCodeFileCheckerFactory('jshint ${options} ${file_path}',
-                                             'JSHint ${file_path}')
-    }
