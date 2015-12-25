@@ -1,5 +1,5 @@
-# pylint: disable=C0111
-# pylint: disable=C0103
+# pylint: disable=invalid-name
+"""Setup script."""
 from setuptools import setup
 from setuptools import find_packages
 from os import path
@@ -35,7 +35,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'check-code = codechecker.loader:main',
+            'check-code = codechecker.scripts.runner:main',
             'setup-githook = codechecker.setup:main'
         ],
     }

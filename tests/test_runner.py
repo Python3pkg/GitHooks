@@ -1,11 +1,11 @@
-"""Yaml loader test cases"""
+"""Checker runner test cases"""
 # pylint: disable=E1101
 import os
 from os import path
 from unittest import mock
 import yaml
 
-from codechecker import loader
+from codechecker.scripts import runner
 from codechecker.checker.base import (ExitCodeChecker,
                                       PylintChecker)
 from codechecker import git
@@ -14,10 +14,10 @@ from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
 
-class LoaderTestCase(TestCase):
-    """Test cases for yaml loader
+class RunnerTestCase(TestCase):
+    """Test cases for code checker runner
 
-    This class test if yaml loader creates proper checkers with proper
+    This class test if code checker runner creates proper checkers with proper
     parameters for stashed files"""
 
     def setUp(self):
@@ -25,20 +25,22 @@ class LoaderTestCase(TestCase):
         self.setUpPyfakefs()
         self.repo_root = '/path/to/repository'
 
-        job_processor_patcher = mock.patch('codechecker.loader.job_processor',
-                                           autospec=True)
+        job_processor_patcher = mock.patch(
+            'codechecker.scripts.runner.job_processor',
+            autospec=True
+        )
         self.addCleanup(job_processor_patcher.stop)
         self.job_processor = job_processor_patcher.start()
         self.job_processor.execute_checkers.return_value = 0
 
-    def test_loader_unittest_checker_is_created_only_once(self):
+    def test_runner_unittest_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
         precommit_yaml_contents = yaml.dump({
             'project-checkers': ['unittest']
         })
         self.setup_git_repository(precommit_yaml_contents)
 
-        loader.main()
+        runner.main()
 
         expected_command = 'python -m unittest discover .'
         expected_task_name = 'python unittest'
@@ -56,7 +58,7 @@ class LoaderTestCase(TestCase):
                         'module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         expected_checkers = []
         for file_path in staged_files:
@@ -80,7 +82,7 @@ class LoaderTestCase(TestCase):
         staged_files = ['module.js']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         expected_command = 'jshint --config .jshintrc' \
             ' /path/to/repository/module.js'
@@ -103,7 +105,7 @@ class LoaderTestCase(TestCase):
         py_files = [f for f in staged_files if f.endswith('.py')]
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         self.assert_pylint_checkers_executed(py_files, accepted_code_rate)
 
@@ -119,7 +121,7 @@ class LoaderTestCase(TestCase):
                         'tests/module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         expected_pylintchecker = PylintChecker(
             'module.py',
@@ -147,7 +149,7 @@ class LoaderTestCase(TestCase):
                         'module2.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         self.assert_pylint_checkers_executed(staged_files, accepted_code_rate)
 
@@ -165,7 +167,7 @@ class LoaderTestCase(TestCase):
                         'tests/module.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         accepted_code_rate = {
             'module.py': 8,
@@ -182,7 +184,7 @@ class LoaderTestCase(TestCase):
         staged_files = ['tests/module.py']
         self.setup_git_repository(precommit_yaml_contents, staged_files)
 
-        loader.main()
+        runner.main()
 
         expected_checker = PylintChecker(
             filename='tests/module.py',
@@ -203,7 +205,7 @@ class LoaderTestCase(TestCase):
         self.setup_git_repository(precommit_yaml_contents)
 
         with self.assertRaises(SystemExit) as context:
-            loader.main()
+            runner.main()
         exc = context.exception
         self.assertEqual(1, exc.code,
                          'If checker fail script should exit with code 1')

@@ -1,6 +1,6 @@
 """Execute checkers defined in precommit-checkers.yml.
 
-see :py:func:`codechecker.loader.main`
+see :func:`codechecker.scripts.runner.main`
 """
 import sys
 import fnmatch
@@ -18,12 +18,15 @@ def main():
     """Run checkers.
 
     1. Load checkers configuration from precommit-checkers.yml
+
     2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
-        list of all configured checkers for project and staged files
+    list of all configured checkers for project and staged files
+
     3. Next call :py:func:`codechecker.job_processor.execute_checkers` to
-        execute created checker tasks and print checkers result
+    execute created checker tasks and print checkers result
+
     4. If :py:func:`codechecker.job_processor.execute_checkers` return non
-        empty value script exits with status 1 so commit is aborted
+    empty value script exits with status 1 so commit is aborted
     """
     checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
     _validate_checkers_data(checkers_data)
