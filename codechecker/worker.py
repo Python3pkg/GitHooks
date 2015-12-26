@@ -55,11 +55,9 @@ def _print_result(result):
     else:
         summary_raw = _DEFAULT_SUMMARY_TEXT[result.status]
     summary = _SUMMARY_FORMAT[result.status](summary_raw)
-    task_name = _bold(result.task_name)
+    taskname = _bold(result.taskname)
 
-    print('* {task}: {summary}'.format(task=task_name, summary=summary))
-    if result.info:
-        print(_info(result.info))
+    print('* {task}: {summary}'.format(task=taskname, summary=summary))
     if result.message:
         print(result.message)
 
