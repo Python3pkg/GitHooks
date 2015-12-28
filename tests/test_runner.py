@@ -33,7 +33,7 @@ class RunnerTestCase(TestCase):
         self.worker = worker_patcher.start()
         self.worker.execute_checkers.return_value = 0
 
-    def test_runner_unittest_checker_is_created_only_once(self):
+    def test_project_checker_is_created_only_once(self):
         """For unittest code checker proper ExitCodeChecker is created"""
         precommit_yaml_contents = yaml.dump({
             'project-checkers': ['unittest']
@@ -49,7 +49,7 @@ class RunnerTestCase(TestCase):
         )
         self.worker.execute_checkers.assert_called_once_with(expected)
 
-    def test_pep8_checker_is_created_for_every_stashed_file(self):
+    def test_file_checker_is_created_for_every_stashed_file(self):
         """ExitCodeChecker can be created for staged files match pattern"""
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {'*.py': ['pep8']}
@@ -175,7 +175,7 @@ class RunnerTestCase(TestCase):
         }
         self.assert_pylint_checkers_executed(staged_files, accepted_code_rate)
 
-    def test_pylintfactory_sets_additional_command_options_to_checker(self):
+    def test_PylintFactory_sets_additional_command_options_to_checker(self):
         precommit_yaml_contents = yaml.dump({
             'file-checkers': {
                 'tests/*.py': [{'pylint': {'rcfile': 'tests/pylintrc'}}]
