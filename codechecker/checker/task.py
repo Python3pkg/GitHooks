@@ -3,7 +3,7 @@
 Exports:
 
 * :class:`CheckResult`: Result of checker execution
-* :class:`Task`: Run checker and return result
+* :class:`ExitCodeChecker`: Run checker and return result
 """
 import sys
 from collections import namedtuple
@@ -30,8 +30,8 @@ class CheckResult(_CheckResult):
 
         Allows to pass default values to namedtuple.
         """
-        return super(CheckResult, cls).__new__(
-            cls, taskname, status, summary, message)
+        return super(CheckResult, cls).__new__(cls, taskname, status,
+                                               summary, message)
 
     def __repr__(self):
         """Convert object to readable format."""
@@ -46,7 +46,8 @@ class CheckResult(_CheckResult):
 class Task:
     """Execute checker and return check result."""
 
-    def __init__(self, taskname, command):
+    # pylint: disable=too-few-public-methods
+    def __init__(self, taskname, command, result_creator=None):
         """Set task name and command.
 
         :param taskname: Task name visible in checking result
@@ -54,19 +55,38 @@ class Task:
         :param command: Shell command
         :type command: string
         """
-        self._taskname = taskname
+        self.taskname = taskname
         self._command = command
+        if result_creator is None:
+            self._create_result = _create_result_by_returncode
+        else:
+            self._create_result = result_creator
 
     def __call__(self):
         """Execute checker and return check result.
 
         :rtype: codechecker.checker.task.CheckResult
         """
+        returncode, stdout = self._execute_shell_command()
+        return self._create_result(self, returncode, stdout)
+
+    def _execute_shell_command(self):
+        """Execute shell command and return result.
+
+        Execute shell command and return its return code, stdout and stderr.
+        Command stderr is redirected to stdout.
+
+        :returns: first item is return code(int), second stdout and stderr(str)
+        :rtype: tuple
+        """
         process = Popen(self._command, stdout=PIPE, stderr=STDOUT)
         stdout, _ = process.communicate()
         returncode = process.returncode
+        return returncode, stdout.decode(sys.stdout.encoding)
 
-        if returncode == 0:
-            return CheckResult(self._taskname)
-        message = stdout.decode(sys.stdout.encoding)
-        return CheckResult(self._taskname, CheckResult.ERROR, message=message)
+
+def _create_result_by_returncode(task, returncode, shell_output):
+    """Create CheckResult based on shell returncode."""
+    if returncode == 0:
+        return CheckResult(task.taskname)
+    return CheckResult(task.taskname, CheckResult.ERROR, message=shell_output)
