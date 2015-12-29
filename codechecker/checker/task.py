@@ -2,8 +2,9 @@
 
 Exports:
 
-* :class:`CheckResult`: Result of checker execution
-* :class:`ExitCodeChecker`: Run checker and return result
+* :class:`CheckResult`: Result of checker execution.
+* :class:`Task`: Run checker and return result.
+* :class:`Config`: Handle task configuration.
 """
 import sys
 from collections import namedtuple
@@ -44,10 +45,10 @@ class CheckResult(_CheckResult):
 
 
 class Task:
+    # pylint: disable=too-few-public-methods
     """Execute checker and return check result."""
 
-    # pylint: disable=too-few-public-methods
-    def __init__(self, taskname, command, result_creator=None):
+    def __init__(self, taskname, command):
         """Set task name and command.
 
         :param taskname: Task name visible in checking result
@@ -57,10 +58,7 @@ class Task:
         """
         self.taskname = taskname
         self._command = command
-        if result_creator is None:
-            self._create_result = _create_result_by_returncode
-        else:
-            self._create_result = result_creator
+        self.result_creator = _create_result_by_returncode
 
     def __call__(self):
         """Execute checker and return check result.
@@ -68,7 +66,7 @@ class Task:
         :rtype: codechecker.checker.task.CheckResult
         """
         returncode, stdout = self._execute_shell_command()
-        return self._create_result(self, returncode, stdout)
+        return self.result_creator(self, returncode, stdout)
 
     def _execute_shell_command(self):
         """Execute shell command and return result.
@@ -85,8 +83,63 @@ class Task:
         return returncode, stdout.decode(sys.stdout.encoding)
 
 
+class Config:
+    # pylint: disable=too-few-public-methods
+    """Handle configuration.
+
+    Config object is initialized by :class:`dict` but every option is accessed
+    through object attribute.
+
+    >>> from codechecker.checker.task import Config
+    >>> config = Config({'option':'value'})
+    >>> config.option
+    'value'
+
+    Config object can contain options created during initialization only.
+    After initialization, trying to set new option raises
+    :exc:`InvalidConfigOptionError` but value of existing option can always be
+    changed.
+    """
+
+    def __init__(self, options):
+        """Set default configuration."""
+        super(Config, self).__setattr__('_options', options)
+
+    def __getattribute__(self, option):
+        """Get config option."""
+        try:
+            return object.__getattribute__(self, '_options')[option]
+        except KeyError:
+            raise InvalidConfigOptionError(
+                '"{}" is not valid config option.'.format(option)
+            )
+
+    def __setattr__(self, option, value):
+        """Set config option."""
+        if option not in self:
+            raise InvalidConfigOptionError(
+                '"{}" is not valid config option.'.format(option)
+            )
+        options = object.__getattribute__(self, '_options')
+        options[option] = value
+
+    def __contains__(self, option):
+        """Check if option exists.
+
+        :rtype: bool
+        """
+        options = object.__getattribute__(self, '_options')
+        return option in options
+
+
 def _create_result_by_returncode(task, returncode, shell_output):
-    """Create CheckResult based on shell returncode."""
+    """Create CheckResult based on shell return code."""
     if returncode == 0:
         return CheckResult(task.taskname)
     return CheckResult(task.taskname, CheckResult.ERROR, message=shell_output)
+
+
+class InvalidConfigOptionError(ValueError):
+    """Thrown if invalid option is passed to checker factory config."""
+
+    pass

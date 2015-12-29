@@ -7,7 +7,9 @@ from subprocess import (PIPE,
                         STDOUT)
 
 from codechecker.checker.task import (Task as CheckerTask,
-                                      CheckResult)
+                                      CheckResult,
+                                      Config,
+                                      InvalidConfigOptionError)
 
 
 class CheckerTestCase(unittest.TestCase):
@@ -85,9 +87,8 @@ class OutputCheckerTestCase(CheckerTestCase):
         self._set_command_result(shell_output)
         taskname = 'pylint'
 
-        result_creator = _pylint_result_creator
-        task = CheckerTask(taskname, 'command-not-important-here',
-                           result_creator)
+        task = CheckerTask(taskname, 'command-not-important-here')
+        task.result_creator = _pylint_result_creator
         result = task()
 
         expected_result = CheckResult(taskname)
@@ -102,9 +103,8 @@ class OutputCheckerTestCase(CheckerTestCase):
         shell_output = _create_pylint_output(code_rate, messages)
         self._set_command_result(shell_output)
 
-        result_creator = _pylint_result_creator
-        task = CheckerTask(taskname, 'command-not-important-here',
-                           result_creator)
+        task = CheckerTask(taskname, 'command-not-important-here')
+        task.result_creator = _pylint_result_creator
         result = task()
 
         expected_result = CheckResult(taskname,
@@ -133,6 +133,34 @@ class CheckResultTestCase(unittest.TestCase):
         )
         _assert_checkresult_equal(expected_checker_result, checker_result)
 
+
+class ConfigTestCase(unittest.TestCase):
+    def test_access_properties_by_object_notation(self):
+        conf = Config({
+            'option1': 'value1',
+            'option2': 'value'
+        })
+        conf.option2 = 'value2'
+
+        self.assertEqual('value1', conf.option1)
+        self.assertEqual('value2', conf.option2)
+
+    def test_throws_InvalidConfigOption_if_undefined_option_is_accessed(self):
+        conf = Config({
+            'option': 'value'
+        })
+
+        self.assertRaises(InvalidConfigOptionError, lambda: conf.invalid_option)
+        with self.assertRaises(InvalidConfigOptionError):
+            conf.invalid_option = 'value'
+
+    def test_contains(self):
+        conf = Config({
+            'option': 'value'
+        })
+
+        self.assertIn('option', conf)
+        self.assertNotIn('invalid-option', conf)
 
 def _assert_checkresult_equal(first, second):
     isequal = isinstance(first, CheckResult) and \
