@@ -48,7 +48,7 @@ class Task:
     # pylint: disable=too-few-public-methods
     """Execute checker and return check result."""
 
-    def __init__(self, taskname, command):
+    def __init__(self, taskname, command, config=None):
         """Set task name and command.
 
         :param taskname: Task name visible in checking result
@@ -58,7 +58,13 @@ class Task:
         """
         self.taskname = taskname
         self._command = command
-        self.result_creator = _create_result_by_returncode
+        if config is None:
+            self.config = Config({})
+        elif isinstance(config, Config):
+            self.config = config
+        else:
+            self.config = Config(config)
+        self.result_creator = create_result_by_returncode
 
     def __call__(self):
         """Execute checker and return check result.
@@ -103,6 +109,11 @@ class Config:
 
     def __init__(self, options):
         """Set default configuration."""
+        if not isinstance(options, dict):
+            raise ValueError(
+                '{} (type: {}) is not valid config options. dict required.'
+                .format(options, type(options))
+            )
         super(Config, self).__setattr__('_options', options)
 
     def __getattribute__(self, option):
@@ -132,7 +143,7 @@ class Config:
         return option in options
 
 
-def _create_result_by_returncode(task, returncode, shell_output):
+def create_result_by_returncode(task, returncode, shell_output) -> CheckResult:
     """Create CheckResult based on shell return code."""
     if returncode == 0:
         return CheckResult(task.taskname)
