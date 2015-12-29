@@ -11,6 +11,7 @@ from collections import namedtuple
 from subprocess import (Popen,
                         PIPE,
                         STDOUT)
+from operator import __setitem__
 
 
 _CheckResult = namedtuple('CheckResult', 'taskname status summary message')
@@ -89,17 +90,9 @@ class Task:
         return returncode, stdout.decode(sys.stdout.encoding)
 
 
-class Config:
+class Config(dict):
     # pylint: disable=too-few-public-methods
     """Handle configuration.
-
-    Config object is initialized by :class:`dict` but every option is accessed
-    through object attribute.
-
-    >>> from codechecker.checker.task import Config
-    >>> config = Config({'option':'value'})
-    >>> config.option
-    'value'
 
     Config object can contain options created during initialization only.
     After initialization, trying to set new option raises
@@ -107,40 +100,26 @@ class Config:
     changed.
     """
 
-    def __init__(self, options):
+    def __init__(self, *args, **kwargs):
         """Set default configuration."""
-        if not isinstance(options, dict):
-            raise ValueError(
-                '{} (type: {}) is not valid config options. dict required.'
-                .format(options, type(options))
-            )
-        super(Config, self).__setattr__('_options', options)
+        super(Config, self).__init__(*args, **kwargs)
 
-    def __getattribute__(self, option):
+    def __getitem__(self, option):
         """Get config option."""
         try:
-            return object.__getattribute__(self, '_options')[option]
+            return dict.__getitem__(self, option)
         except KeyError:
             raise InvalidConfigOptionError(
                 '"{}" is not valid config option.'.format(option)
             )
 
-    def __setattr__(self, option, value):
+    def __setitem__(self, option, value):
         """Set config option."""
         if option not in self:
             raise InvalidConfigOptionError(
                 '"{}" is not valid config option.'.format(option)
             )
-        options = object.__getattribute__(self, '_options')
-        options[option] = value
-
-    def __contains__(self, option):
-        """Check if option exists.
-
-        :rtype: bool
-        """
-        options = object.__getattribute__(self, '_options')
-        return option in options
+        dict.__setitem__(self, option, value)
 
 
 def create_result_by_returncode(task, returncode, shell_output) -> CheckResult:

@@ -83,7 +83,7 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
 
         for each_config in config:
             task = CheckerTask('dummy-taskname', 'dummy-command', each_config)
-            self.assertEqual('value', task.config.option)
+            self.assertEqual('value', task.config['option'])
 
 
 class CustomResultCreatorTestCase(CheckerTestCase):
@@ -208,19 +208,19 @@ class ConfigTestCase(unittest.TestCase):
             'option1': 'value1',
             'option2': 'value'
         })
-        conf.option2 = 'value2'
+        conf['option2'] = 'value2'
 
-        self.assertEqual('value1', conf.option1)
-        self.assertEqual('value2', conf.option2)
+        self.assertEqual('value1', conf['option1'])
+        self.assertEqual('value2', conf['option2'])
 
     def test_throws_InvalidConfigOption_if_undefined_option_is_accessed(self):
         conf = Config({
             'option': 'value'
         })
 
-        self.assertRaises(InvalidConfigOptionError, lambda: conf.invalid_option)
+        self.assertRaises(InvalidConfigOptionError, lambda: conf['invalid_option'])
         with self.assertRaises(InvalidConfigOptionError):
-            conf.invalid_option = 'value'
+            conf['invalid_option'] = 'value'
 
     def test_contains(self):
         conf = Config({
@@ -297,7 +297,7 @@ _RE_PYLINT_MESSAGE = re.compile(
 
 
 def _pylint_result_creator(task, _, shell_output):
-    accepted_code_rate = task.config.accepted_code_rate
+    accepted_code_rate = task.config['accepted_code_rate']
     actual_code_rate = float(_RE_CODE_RATE.findall(shell_output)[0])
     if actual_code_rate == 10:
         return CheckResult(task.taskname)
