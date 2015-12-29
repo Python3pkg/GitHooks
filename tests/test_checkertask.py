@@ -21,10 +21,11 @@ class CheckerTestCase(unittest.TestCase):
     def setUp(self):
         self._prepare_shell_command()
 
-    def _set_command_result(self, output='', returncode=0):
+    def _set_command_result(self, stdout='', returncode=0):
         """Set shell command stdout/stderr and return code."""
-        stdout = output.encode(sys.stdout.encoding) # convert string to bytes
-        self.popen.return_value.communicate.return_value = (stdout, b'')
+        # communicate return tuple of bytes so convert string to bytes
+        stdout_bytes = stdout.encode(sys.stdout.encoding)
+        self.popen.return_value.communicate.return_value = (stdout_bytes, b'')
         self.popen.return_value.returncode = returncode
 
     def _prepare_shell_command(self):
@@ -67,7 +68,7 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
         task = CheckerTask('taskname', 'command')
         errmsg = 'error message'
 
-        self._set_command_result(output=errmsg, returncode=1)
+        self._set_command_result(stdout=errmsg, returncode=1)
         result = task()
 
         expected_result = CheckResult('taskname', CheckResult.ERROR,
@@ -95,7 +96,7 @@ class OutputCheckerTestCase(CheckerTestCase):
     def test_pass_if_code_rate_is_10(self):
         """Test if result is determined by function assigned to result_creator attribute."""
         shell_output = _create_pylint_output(10)
-        self._set_command_result(shell_output)
+        self._set_command_result(stdout=shell_output)
         taskname = 'pylint'
 
         task = _create_pylint_task(taskname=taskname)
@@ -112,7 +113,7 @@ class OutputCheckerTestCase(CheckerTestCase):
                     'filename.py:10: other warning')
         code_rate = 8.5
         shell_output = _create_pylint_output(code_rate, messages)
-        self._set_command_result(output=shell_output)
+        self._set_command_result(stdout=shell_output)
 
         config = {'accepted_code_rate': 8}
         task = _create_pylint_task(taskname=dummy_taskname, config=config)
@@ -132,7 +133,7 @@ class OutputCheckerTestCase(CheckerTestCase):
                     'filename.py:10: other warning')
         code_rate = 8
         shell_output = _create_pylint_output(code_rate, messages)
-        self._set_command_result(shell_output)
+        self._set_command_result(stdout=shell_output)
 
         task = _create_pylint_task(taskname=dummy_taskname)
         task.result_creator = _pylint_result_creator
@@ -151,7 +152,7 @@ class UnittestCheckerTestCase(CheckerTestCase):
         dummy_taskname = 'unittest'
         lines = ('ignored line', 'Ran 26 tests in 0.263s', 'OK (skipped=1)')
         shell_output = '\n'.join(lines)
-        self._set_command_result(shell_output)
+        self._set_command_result(stdout=shell_output)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
         task.result_creator = _create_python_unittest_result
@@ -166,7 +167,7 @@ class UnittestCheckerTestCase(CheckerTestCase):
         dummy_taskname = 'unittest'
         lines = ('ignored line', 'FAILED (errors=2)')
         shell_output = '\n'.join(lines)
-        self._set_command_result(shell_output, 1)
+        self._set_command_result(stdout=shell_output, returncode=1)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
         task.result_creator = _create_python_unittest_result
