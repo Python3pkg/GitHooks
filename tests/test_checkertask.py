@@ -44,7 +44,7 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
     commands and returns correct results.
 
     This class test SUT in terms of determining result based on shell command
-    return code.
+    return code (which is default behavior of Task class).
     """
 
     def test_task_is_executable(self):
@@ -86,11 +86,12 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
             self.assertEqual('value', task.config.option)
 
 
-class OutputCheckerTestCase(CheckerTestCase):
+class CustomResultCreatorTestCase(CheckerTestCase):
     """Test :class:`codechecker.checker.task.Task`.
 
-    This class test SUT in terms of determining result based on shell command
-    stdout/stderr.
+    This class test SUT in terms of determining result by custom result creator.
+    Result creator is function which accepts Task object, shell return code,
+    stdout and creates :class:`codechecker.checker.task.CheckResult`.
     """
 
     def test_pass_if_code_rate_is_10(self):
