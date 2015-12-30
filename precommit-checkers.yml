@@ -4,4 +4,4 @@ file-checkers:
   'tests/*.py':
     - pylint: {rcfile: tests/pylintrc}
 config: 
-  pylint: {accepted_code_rate: 9}
+  pylint: {accepted-code-rate: 9}

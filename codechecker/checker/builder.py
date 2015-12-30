@@ -16,8 +16,7 @@ Exceptions:
 import copy
 from string import Template
 
-from codechecker.checker.base import (PylintChecker,
-                                      ExitCodeChecker)
+from codechecker.checker.task import Task
 from codechecker import git
 
 
@@ -124,15 +123,32 @@ class CheckListBuilder:
             )
 
 
-class _CheckerFactory:
-    """Base checker factory."""
+class TaskCreator:
+    """Create :class:`codechecker.checker.task.Task` objects."""
 
-    default_config = {}
-    checker_name = 'abstract checker'
+    def __init__(self, checkername, taskname, command, defaultconfig=None,
+                 command_options=None, result_creator=None):
+        """Set checker data."""
+        # pylint: disable=too-many-arguments
+        self._checkername = checkername
+        self._taskname = Template(taskname)
+        self._command = Template(command)
+        self.config = defaultconfig if defaultconfig else {}
+        self._command_options = command_options
+        self._result_creator = result_creator
 
-    def __init__(self):
-        """Initialize factory with default config."""
-        self.config = copy.copy(self.default_config)
+    def create_for_file(self, relpath, config):
+        """Create Task for specified file."""
+        abspath = git.abspath(relpath)
+        config = self._mix_config(config)
+        command = self._command.safe_substitute(file_abspath=abspath)
+        taskname = self._taskname.substitute(file_relpath=relpath)
+        task = Task(taskname, command, config)
+        if self._command_options:
+            task.command_options = self._command_options
+        if self._result_creator:
+            task.result_creator = self._result_creator
+        return task
 
     def set_config(self, config):
         """Overwrite default configuration.
@@ -140,9 +156,13 @@ class _CheckerFactory:
         :type config: dict
         :raises: :exc:`ValueError` if passed config contains invalid option
         """
-        self.config = self._mixin_config(config)
+        self.config = self._mix_config(config)
 
-    def _mixin_config(self, config):
+    def __call__(self):
+        """Create task for project."""
+        return Task(self._taskname.template, self._command.template)
+
+    def _mix_config(self, config):
         """Get joined factory config with passed one.
 
         This method does not change factory configuration, it returns new
@@ -154,60 +174,10 @@ class _CheckerFactory:
         for option_name, option_value in config.items():
             if option_name not in self.config:
                 msg = '"{}" is not valid option for "{}"' \
-                    .format(option_name, self.checker_name)
+                    .format(option_name, self._checkername)
                 raise ValueError(msg)
             result_config[option_name] = option_value
         return result_config
-
-
-class PylintCheckerFactory(_CheckerFactory):
-    """Create :class:`codechecker.checker.base.PylintChecker`."""
-
-    default_config = {
-        'accepted_code_rate': 9,
-        'rcfile': None
-    }
-    checker_name = 'pylint'
-
-    def create_for_file(self, file_path, config=None):
-        """Create pylint checker for passed file."""
-        config = self._mixin_config(config)
-        accepted_code_rate = config['accepted_code_rate']
-        abspath = git.abspath(file_path)
-        checker = PylintChecker(file_path, abspath, accepted_code_rate)
-        if config['rcfile']:
-            checker.rcfile = config['rcfile']
-        return checker
-
-
-class ExitCodeFileCheckerFactory(_CheckerFactory):
-    """Create :class:`codechecker.checker.base.ExitCodeChecker`."""
-
-    default_config = {'command-options': ''}
-    checker_name = 'exit code checker'
-
-    def __init__(self, command_pattern, taskname_pattern):
-        """Set command and task name pattern."""
-        super(ExitCodeFileCheckerFactory, self).__init__()
-        self.command_pattern = Template(command_pattern)
-        self.taskname_pattern = Template(taskname_pattern)
-
-    def create_for_file(self, file_path, config=None):
-        """Create ExitCodeChecker for passed file."""
-        config = self._mixin_config(config)
-        command_pattern_params = {'file_path': git.abspath(file_path)}
-        if self._is_additional_options_expected():
-            command_options = config['command-options']
-            command_pattern_params['options'] = command_options
-        command = self.command_pattern.substitute(command_pattern_params)
-        task_name = self.taskname_pattern.substitute(file_path=file_path)
-
-        return ExitCodeChecker(command, task_name)
-
-    def _is_additional_options_expected(self):
-        return self.command_pattern.template.find('$options ') >= 0 \
-            or self.command_pattern.template.find('${options}') >= 0 \
-            or self.command_pattern.template.endswith('$options')
 
 
 class InvalidCheckerError(ValueError):

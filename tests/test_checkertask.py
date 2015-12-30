@@ -90,13 +90,13 @@ class BuildShellCommandTestCase(CheckerTestCase):
         """Pylint accepts pylintrc option."""
         command_pattern = 'pylint -f parseable /path/to/module.py ${options}'
         config = {
-            'rcfile': 'pylintrc',
-            'command-options': {
-                'rcfile': '--rcfile=${value}'
-            }
+            'rcfile': 'pylintrc'
         }
 
         task = CheckerTask('dummy-taskname', command_pattern, config)
+        task.command_options = {
+            'rcfile': '--rcfile=${value}'
+        }
         task()
 
         expected_command = 'pylint -f parseable /path/to/module.py ' \
@@ -106,13 +106,13 @@ class BuildShellCommandTestCase(CheckerTestCase):
     def test_replace_options_placeholder_with_checker_options2(self):
         command_pattern = 'jshint ${options} /path/to/file.js'
         config = {
-            'config': '.jshintrc',
-            'command-options': {
-                'config': '--config ${value}'
-            }
+            'config': '.jshintrc'
         }
 
         task = CheckerTask('dummy-taskname', command_pattern, config)
+        task.command_options = {
+            'config': '--config ${value}'
+        }
         task()
 
         expected_command = 'jshint --config .jshintrc /path/to/file.js'
@@ -121,13 +121,13 @@ class BuildShellCommandTestCase(CheckerTestCase):
     def test_config_options_should_be_properly_quoted(self):
         command_pattern = 'jshint ${options} /path/to/file.js'
         config = {
-            'config': '.jshint rc',
-            'command-options': {
-                'config': '--config ${value}'
-            }
+            'config': '.jshint rc'
         }
 
         task = CheckerTask('dummy-taskname', command_pattern, config)
+        task.command_options = {
+            'config': '--config ${value}'
+        }
         task()
 
         expected_command = "jshint --config '.jshint rc' /path/to/file.js"

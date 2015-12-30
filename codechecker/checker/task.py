@@ -66,6 +66,7 @@ class Task:
         else:
             self.config = config
         self.result_creator = create_result_by_returncode
+        self.command_options = {}
 
     def __call__(self):
         """Execute checker and return check result.
@@ -74,6 +75,14 @@ class Task:
         """
         returncode, stdout = self._execute_shell_command()
         return self.result_creator(self, returncode, stdout)
+
+    def __repr__(self):
+        """Create representation of Task."""
+        return '<Task({}): command={}, config={}>'.format(
+            self.taskname,
+            repr(' '.join(self._build_command())),
+            repr(self.config)
+        )
 
     def _execute_shell_command(self):
         """Execute shell command and return result.
@@ -95,14 +104,16 @@ class Task:
         Passes some config options to command options.
         """
         options = []
-        if 'command-options' in self.config:
-            command_options = self.config['command-options']
-            for each_option in command_options:
-                option_pattern = Template(
-                    command_options[each_option]
-                )
-                option_value = quote(self.config[each_option])
-                options.append(option_pattern.substitute(value=option_value))
+        for each_option in self.command_options:
+            option_value = self.config[each_option]
+            if not option_value:
+                continue
+            option_pattern = Template(
+                self.command_options[each_option]
+            )
+            options.append(
+                option_pattern.substitute(value=quote(option_value))
+            )
         space_separated_options = ' '.join(options)
 
         command_string = self._command.substitute(
