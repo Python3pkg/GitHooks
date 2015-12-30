@@ -8,9 +8,7 @@ from subprocess import (PIPE,
                         STDOUT)
 
 from codechecker.checker.task import (Task as CheckerTask,
-                                      CheckResult,
-                                      Config)
-from codechecker.checker.task import InvalidConfigOptionError
+                                      CheckResult)
 
 
 class CheckerTestCase(unittest.TestCase):
@@ -81,14 +79,10 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
         _assert_checkresult_equal(expected_result, result)
 
     def test_task_accepts_config(self):
-        config = [
-            {'option': 'value'},
-            Config({'option': 'value'})
-        ]
+        config = {'option': 'value'}
 
-        for each_config in config:
-            task = CheckerTask('dummy-taskname', 'dummy-command', each_config)
-            self.assertEqual('value', task.config['option'])
+        task = CheckerTask('dummy', 'dummy', config)
+        self.assertEqual('value', task.config['option'])
 
 
 class BuildShellCommandTestCase(CheckerTestCase):
@@ -253,36 +247,6 @@ class CheckResultTestCase(unittest.TestCase):
         )
         _assert_checkresult_equal(expected_checker_result, checker_result)
 
-
-class ConfigTestCase(unittest.TestCase):
-    """Test :class:`codechecker.checker.task.Config`."""
-
-    def test_access_properties_by_object_notation(self):
-        conf = Config({
-            'option1': 'value1',
-            'option2': 'value'
-        })
-        conf['option2'] = 'value2'
-
-        self.assertEqual('value1', conf['option1'])
-        self.assertEqual('value2', conf['option2'])
-
-    def test_throws_InvalidConfigOption_if_undefined_option_is_accessed(self):
-        conf = Config({
-            'option': 'value'
-        })
-
-        self.assertRaises(InvalidConfigOptionError, lambda: conf['invalid_option'])
-        with self.assertRaises(InvalidConfigOptionError):
-            conf['invalid_option'] = 'value'
-
-    def test_contains(self):
-        conf = Config({
-            'option': 'value'
-        })
-
-        self.assertIn('option', conf)
-        self.assertNotIn('invalid-option', conf)
 
 def _assert_checkresult_equal(first, second):
     """Check equality of :class:`codechekcer.checker.task.CheckResult`.

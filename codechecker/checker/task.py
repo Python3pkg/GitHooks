@@ -14,7 +14,6 @@ from collections import namedtuple
 from subprocess import (Popen,
                         PIPE,
                         STDOUT)
-from operator import __setitem__
 
 
 _CheckResult = namedtuple('CheckResult', 'taskname status summary message')
@@ -63,11 +62,9 @@ class Task:
         self.taskname = taskname
         self._command = Template(command)
         if config is None:
-            self.config = Config({})
-        elif isinstance(config, Config):
-            self.config = config
+            self.config = {}
         else:
-            self.config = Config(config)
+            self.config = config
         self.result_creator = create_result_by_returncode
 
     def __call__(self):
@@ -114,46 +111,8 @@ class Task:
         return split(command_string)
 
 
-class Config(dict):
-    # pylint: disable=too-few-public-methods
-    """Handle configuration.
-
-    Config object can contain options created during initialization only.
-    After initialization, trying to set new option raises
-    :exc:`InvalidConfigOptionError` but value of existing option can always be
-    changed.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """Set default configuration."""
-        super(Config, self).__init__(*args, **kwargs)
-
-    def __getitem__(self, option):
-        """Get config option."""
-        try:
-            return dict.__getitem__(self, option)
-        except KeyError:
-            raise InvalidConfigOptionError(
-                '"{}" is not valid config option.'.format(option)
-            )
-
-    def __setitem__(self, option, value):
-        """Set config option."""
-        if option not in self:
-            raise InvalidConfigOptionError(
-                '"{}" is not valid config option.'.format(option)
-            )
-        dict.__setitem__(self, option, value)
-
-
 def create_result_by_returncode(task, returncode, shell_output) -> CheckResult:
     """Create CheckResult based on shell return code."""
     if returncode == 0:
         return CheckResult(task.taskname)
     return CheckResult(task.taskname, CheckResult.ERROR, message=shell_output)
-
-
-class InvalidConfigOptionError(ValueError):
-    """Thrown if invalid option is passed to checker factory config."""
-
-    pass
