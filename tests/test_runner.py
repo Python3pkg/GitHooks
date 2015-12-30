@@ -7,6 +7,7 @@ import yaml
 from codechecker.scripts import runner
 from codechecker.checker.base import (ExitCodeChecker,
                                       PylintChecker)
+from codechecker.checker.task import Task
 from codechecker import git
 from codechecker.checker.builder import PylintCheckerFactory
 from tests.testcase import TestCase
@@ -40,12 +41,12 @@ class RunnerTestCase(TestCase):
         })
         self.setup_git_repository(precommit_yaml_contents)
 
-        runner.main()
+        runner.temporary_runner()
 
         expected_command = 'python -m unittest discover .'
         expected_task_name = 'python unittest'
         expected = UnOrderedCollectionMatcher(
-            [ExitCodeChecker(expected_command, expected_task_name)]
+            [Task(expected_task_name, expected_command)]
         )
         self.worker.execute_checkers.assert_called_once_with(expected)
 
@@ -281,6 +282,15 @@ def _get_default_acceptedcoderate():
     return PylintCheckerFactory.default_config['accepted_code_rate']
 
 
+def _is_tasks_equal(expected, actual):
+    # pylint: disable=protected-access
+    return isinstance(expected, Task) and \
+        isinstance(actual, Task) and \
+        expected._command.template == actual._command.template and \
+        expected.config == actual.config and \
+        expected.result_creator == actual.result_creator
+
+
 def _compare_pylint_checker(expected, actual):
     """Check if two PylintChecker objects are equal"""
     return isinstance(expected, PylintChecker) and \
@@ -291,8 +301,8 @@ def _compare_pylint_checker(expected, actual):
 
 
 def _compare_exitcode_checker(expected, actual):
-    """Check if two ExitCodeChecker objects are equal"""
     # pylint: disable=protected-access
+    """Check if two ExitCodeChecker objects are equal"""
     return isinstance(expected, ExitCodeChecker) and \
         isinstance(actual, ExitCodeChecker) and \
         expected._command == actual._command and \
@@ -302,3 +312,5 @@ UnOrderedCollectionMatcher.register_equalityfunc(PylintChecker,
                                                  _compare_pylint_checker)
 UnOrderedCollectionMatcher.register_equalityfunc(ExitCodeChecker,
                                                  _compare_exitcode_checker)
+UnOrderedCollectionMatcher.register_equalityfunc(Task,
+                                                 _is_tasks_equal)

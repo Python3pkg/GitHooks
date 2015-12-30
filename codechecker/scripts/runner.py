@@ -11,7 +11,8 @@ from codechecker import worker
 from codechecker import git
 from codechecker.checker.builder import CheckListBuilder
 from codechecker.concrete_checkers import (get_projectcheckers,
-                                           get_filecheckers)
+                                           get_filecheckers,
+                                           get_projectcheckers_temporary)
 
 
 def main():
@@ -43,9 +44,38 @@ def main():
     return _execute_checkers(checklist_builder.get_result())
 
 
+def temporary_runner():
+    """Run checkers.
+
+    This method works same as main but use codechecker.checker.task instead of
+    codechecker.checker.base.
+    """
+    checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
+    _validate_checkers_data(checkers_data)
+    checklist_builder = _temporary_init_checkers_builder()
+    if 'config' in checkers_data:
+        _set_checkers_config(checklist_builder, checkers_data['config'])
+    if 'project-checkers' in checkers_data:
+        _create_project_checkers(checklist_builder,
+                                 checkers_data['project-checkers'])
+    if 'file-checkers' in checkers_data:
+        _create_file_checkers(checklist_builder,
+                              checkers_data['file-checkers'])
+
+    return _execute_checkers(checklist_builder.get_result())
+
+
 def _init_checkers_builder():
     checklist_builder = CheckListBuilder(
         get_projectcheckers(),
+        get_filecheckers()
+    )
+    return checklist_builder
+
+
+def _temporary_init_checkers_builder():
+    checklist_builder = CheckListBuilder(
+        get_projectcheckers_temporary(),
         get_filecheckers()
     )
     return checklist_builder

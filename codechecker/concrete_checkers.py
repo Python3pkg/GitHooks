@@ -6,6 +6,7 @@ checkers tasks.
 from codechecker.checker.builder import (PylintCheckerFactory,
                                          ExitCodeFileCheckerFactory)
 from codechecker.checker.base import ExitCodeChecker
+from codechecker.checker.task import Task
 
 
 def get_projectcheckers():
@@ -26,4 +27,12 @@ def get_filecheckers():
                                              'PEP 257 ${file_path}'),
         'jshint': ExitCodeFileCheckerFactory('jshint ${options} ${file_path}',
                                              'JSHint ${file_path}')
+    }
+
+
+def get_projectcheckers_temporary():
+    """Return project checkers factories."""
+    return {
+        'unittest': lambda: Task('python unittest',
+                                 'python -m unittest discover .')
     }
