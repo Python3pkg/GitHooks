@@ -2,6 +2,7 @@
 import sys
 import unittest
 import re
+from shlex import split
 from unittest import mock
 from subprocess import (PIPE,
                         STDOUT)
@@ -20,6 +21,11 @@ class CheckerTestCase(unittest.TestCase):
 
     def setUp(self):
         self._prepare_shell_command()
+
+    def assert_shell_command_executed(self, shell_command):
+        """assert that shell command was executed once and was equal to passed one."""
+        self.popen.assert_called_once_with(split(shell_command),
+                                           stdout=PIPE, stderr=STDOUT)
 
     def _set_command_result(self, stdout='', returncode=0):
         """Set shell command stdout/stderr and return code."""
@@ -52,8 +58,7 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
         task = CheckerTask('taskname', 'command')
 
         task()
-        self.popen.assert_called_once_with('command',
-                                           stdout=PIPE, stderr=STDOUT)
+        self.assert_shell_command_executed('command')
 
     def test_task_returns_CheckResult(self):
         """Checker task should return :class:`codechecker.checker.task.CheckResult`"""
@@ -86,6 +91,55 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
             self.assertEqual('value', task.config['option'])
 
 
+class BuildShellCommandTestCase(CheckerTestCase):
+    def test_replace_options_placeholder_with_checker_options(self):
+        """Pylint accepts pylintrc option."""
+        command_pattern = 'pylint -f parseable /path/to/module.py ${options}'
+        config = {
+            'rcfile': 'pylintrc',
+            'command-options': {
+                'rcfile': '--rcfile=${value}'
+            }
+        }
+
+        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task()
+
+        expected_command = 'pylint -f parseable /path/to/module.py ' \
+            '--rcfile=pylintrc'
+        self.assert_shell_command_executed(expected_command)
+
+    def test_replace_options_placeholder_with_checker_options2(self):
+        command_pattern = 'jshint ${options} /path/to/file.js'
+        config = {
+            'config': '.jshintrc',
+            'command-options': {
+                'config': '--config ${value}'
+            }
+        }
+
+        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task()
+
+        expected_command = 'jshint --config .jshintrc /path/to/file.js'
+        self.assert_shell_command_executed(expected_command)
+
+    def test_config_options_should_be_properly_quoted(self):
+        command_pattern = 'jshint ${options} /path/to/file.js'
+        config = {
+            'config': '.jshint rc',
+            'command-options': {
+                'config': '--config ${value}'
+            }
+        }
+
+        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task()
+
+        expected_command = "jshint --config '.jshint rc' /path/to/file.js"
+        self.assert_shell_command_executed(expected_command)
+
+
 class CustomResultCreatorTestCase(CheckerTestCase):
     """Test :class:`codechecker.checker.task.Task`.
 
@@ -116,7 +170,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
         shell_output = _create_pylint_output(code_rate, messages)
         self._set_command_result(stdout=shell_output)
 
-        config = {'accepted_code_rate': 8}
+        config = {'accepted-code-rate': 8}
         task = _create_pylint_task(taskname=dummy_taskname, config=config)
         task.result_creator = _pylint_result_creator
         result = task()
@@ -233,7 +287,7 @@ class ConfigTestCase(unittest.TestCase):
 def _assert_checkresult_equal(first, second):
     """Check equality of :class:`codechekcer.checker.task.CheckResult`.
 
-    Check if two passed arguments are 
+    Check if two passed arguments are
     :class:`codechekcer.checker.task.CheckResult` and if all their attributes
     are equal.
     """
@@ -252,7 +306,7 @@ def _assert_checkresult_equal(first, second):
 
 def _create_pylint_task(taskname='dummy', command='dummy', config=None):
     if config is None:
-        config = {'accepted_code_rate': 9}
+        config = {'accepted-code-rate': 9}
     return CheckerTask(taskname, command, config)
 
 
@@ -297,7 +351,7 @@ _RE_PYLINT_MESSAGE = re.compile(
 
 
 def _pylint_result_creator(task, _, shell_output):
-    accepted_code_rate = task.config['accepted_code_rate']
+    accepted_code_rate = task.config['accepted-code-rate']
     actual_code_rate = float(_RE_CODE_RATE.findall(shell_output)[0])
     if actual_code_rate == 10:
         return CheckResult(task.taskname)

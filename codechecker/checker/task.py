@@ -7,6 +7,9 @@ Exports:
 * :class:`Config`: Handle task configuration.
 """
 import sys
+from string import Template
+from shlex import (split,
+                   quote)
 from collections import namedtuple
 from subprocess import (Popen,
                         PIPE,
@@ -58,7 +61,7 @@ class Task:
         :type command: string
         """
         self.taskname = taskname
-        self._command = command
+        self._command = Template(command)
         if config is None:
             self.config = Config({})
         elif isinstance(config, Config):
@@ -84,10 +87,31 @@ class Task:
         :returns: first item is return code(int), second stdout and stderr(str)
         :rtype: tuple
         """
-        process = Popen(self._command, stdout=PIPE, stderr=STDOUT)
+        process = Popen(self._build_command(), stdout=PIPE, stderr=STDOUT)
         stdout, _ = process.communicate()
         returncode = process.returncode
         return returncode, stdout.decode(sys.stdout.encoding)
+
+    def _build_command(self):
+        """Prepare shell command.
+
+        Passes some config options to command options.
+        """
+        options = []
+        if 'command-options' in self.config:
+            command_options = self.config['command-options']
+            for each_option in command_options:
+                option_pattern = Template(
+                    command_options[each_option]
+                )
+                option_value = quote(self.config[each_option])
+                options.append(option_pattern.substitute(value=option_value))
+        space_separated_options = ' '.join(options)
+
+        command_string = self._command.substitute(
+            options=space_separated_options
+        )
+        return split(command_string)
 
 
 class Config(dict):

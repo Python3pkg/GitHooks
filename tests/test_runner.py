@@ -1,5 +1,4 @@
 """Checker runner test cases"""
-# pylint: disable=E1101
 import os
 from os import path
 from unittest import mock
@@ -15,6 +14,7 @@ from tests.comparison import UnOrderedCollectionMatcher
 
 
 class RunnerTestCase(TestCase):
+    # pylint: disable=no-member
     """Test cases for code checker runner
 
     This class test if code checker runner creates proper checkers with proper
