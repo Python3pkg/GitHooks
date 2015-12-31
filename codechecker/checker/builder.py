@@ -59,7 +59,7 @@ class CheckListBuilder:
             raise InvalidCheckerError(
                 '"{}" is invalid project checker'.format(name)
             )
-        checker = creator()
+        checker = creator.create()
         self._checker_tasks.append(checker)
 
     def add_checkers_for_file(self, file_path, checkers_list):
@@ -107,7 +107,7 @@ class CheckListBuilder:
             checkername = checker_data
             config = None
         factory = self._get_filechecker_factory(checkername)
-        return factory.create_for_file(file_path, config)
+        return factory.create(file_path, config)
 
     def _get_filechecker_factory(self, checkername):
         """Get factory for file checker.
@@ -137,12 +137,16 @@ class TaskCreator:
         self._command_options = command_options
         self._result_creator = result_creator
 
-    def create_for_file(self, relpath, config):
+    def create(self, relpath=None, config=None):
         """Create Task for specified file."""
-        abspath = git.abspath(relpath)
         config = self._mix_config(config)
-        command = self._command.safe_substitute(file_abspath=abspath)
-        taskname = self._taskname.substitute(file_relpath=relpath)
+        if relpath:
+            abspath = git.abspath(relpath)
+            command = self._command.safe_substitute(file_abspath=abspath)
+            taskname = self._taskname.substitute(file_relpath=relpath)
+        else:
+            taskname = self._taskname.template
+            command = self._command.template
         task = Task(taskname, command, config)
         if self._command_options:
             task.command_options = self._command_options
@@ -157,10 +161,6 @@ class TaskCreator:
         :raises: :exc:`ValueError` if passed config contains invalid option
         """
         self.config = self._mix_config(config)
-
-    def __call__(self):
-        """Create task for project."""
-        return Task(self._taskname.template, self._command.template)
 
     def _mix_config(self, config):
         """Get joined factory config with passed one.
