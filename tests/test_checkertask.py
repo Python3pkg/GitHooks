@@ -1,7 +1,6 @@
 """Test :mod:`codechecker.checker.task`."""
 import sys
 import unittest
-import re
 from shlex import split
 from unittest import mock
 from subprocess import (PIPE,
@@ -9,6 +8,8 @@ from subprocess import (PIPE,
 
 from codechecker.checker.task import (Task as CheckerTask,
                                       CheckResult)
+from codechecker.result_creators import (create_pylint_result,
+                                         create_pyunittest_result)
 
 
 class CheckerTestCase(unittest.TestCase):
@@ -149,7 +150,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
         taskname = 'pylint'
 
         task = _create_pylint_task(taskname=taskname)
-        task.result_creator = _pylint_result_creator
+        task.result_creator = create_pylint_result
         result = task()
 
         expected_result = CheckResult(taskname)
@@ -166,7 +167,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
 
         config = {'accepted-code-rate': 8}
         task = _create_pylint_task(taskname=dummy_taskname, config=config)
-        task.result_creator = _pylint_result_creator
+        task.result_creator = create_pylint_result
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -185,7 +186,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
         self._set_command_result(stdout=shell_output)
 
         task = _create_pylint_task(taskname=dummy_taskname)
-        task.result_creator = _pylint_result_creator
+        task.result_creator = create_pylint_result
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -204,7 +205,7 @@ class UnittestCheckerTestCase(CheckerTestCase):
         self._set_command_result(stdout=shell_output)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
-        task.result_creator = _create_python_unittest_result
+        task.result_creator = create_pyunittest_result
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -219,7 +220,7 @@ class UnittestCheckerTestCase(CheckerTestCase):
         self._set_command_result(stdout=shell_output, returncode=1)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
-        task.result_creator = _create_python_unittest_result
+        task.result_creator = create_pyunittest_result
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -280,51 +281,3 @@ def _create_pylint_output(code_rate, messages=tuple()):
     lines.append('ignored stuff')
     lines.append('Your code has been rated at {0:.2f}/10'.format(code_rate))
     return '\n'.join(lines)
-
-
-_RE_UNITTEST_SKIPPED_TESTS = re.compile(r'OK \(skipped=\d+\)')
-_RE_UNITTEST_ERRORS = re.compile(
-    r'FAILED \((?:failures=\d+)?(?:, )?(?:errors=\d+)?(?:, )?(?:skipped=\d+)?\)'
-)
-_RE_UNITTEST_TEST_NUMBER = re.compile(r'Ran \d+ tests in [0-9\.]+s')
-
-
-def _create_python_unittest_result(task, returncode, shell_output):
-    summary_match = _RE_UNITTEST_SKIPPED_TESTS.findall(shell_output)
-    if not summary_match:
-        summary_match = _RE_UNITTEST_ERRORS.findall(shell_output)
-
-    ran_tests_match = _RE_UNITTEST_TEST_NUMBER.findall(shell_output)
-    test_number_summary = ran_tests_match[0] + ' - ' if ran_tests_match else ''
-
-    if returncode != 0:
-        status = CheckResult.ERROR
-        summary = summary_match[0] if summary_match else 'Errors'
-    elif summary_match:
-        status = CheckResult.WARNING
-        summary = summary_match[0]
-    else:
-        status = CheckResult.SUCCESS
-        summary = None
-    return CheckResult(task.taskname, status, test_number_summary + summary)
-
-
-_RE_CODE_RATE = re.compile(r'Your code has been rated at (-?[\d\.]+)/10')
-_RE_PYLINT_MESSAGE = re.compile(
-    r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
-
-
-def _pylint_result_creator(task, _, shell_output):
-    accepted_code_rate = task.config['accepted-code-rate']
-    actual_code_rate = float(_RE_CODE_RATE.findall(shell_output)[0])
-    if actual_code_rate == 10:
-        return CheckResult(task.taskname)
-
-    if actual_code_rate >= accepted_code_rate:
-        status = CheckResult.WARNING
-        summary = 'Code Rate {0:.2f}/10'.format(actual_code_rate)
-    else:
-        status = CheckResult.ERROR
-        summary = 'Failed: Code Rate {0:.2f}/10'.format(actual_code_rate)
-    messages = '\n'.join(_RE_PYLINT_MESSAGE.findall(shell_output))
-    return CheckResult(task.taskname, status, summary, messages)

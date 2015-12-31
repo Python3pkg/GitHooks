@@ -9,7 +9,7 @@ from codechecker.checker.task import Task
 from codechecker import git
 from codechecker.checkers_definition import (PROJECT_CHECKERS,
                                            FILE_CHECKERS)
-from codechecker.checkers_definition import create_pylint_result
+from codechecker.result_creators import create_pylint_result
 from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
