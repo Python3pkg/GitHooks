@@ -26,7 +26,7 @@ class CheckerTestCase(unittest.TestCase):
         self.popen.assert_called_once_with(split(shell_command),
                                            stdout=PIPE, stderr=STDOUT)
 
-    def _set_command_result(self, stdout='', returncode=0):
+    def patch_shellcommand_result(self, stdout='', returncode=0):
         """Set shell command stdout/stderr and return code."""
         # communicate return tuple of bytes so convert string to bytes
         stdout_bytes = stdout.encode(sys.stdout.encoding)
@@ -39,7 +39,7 @@ class CheckerTestCase(unittest.TestCase):
                                    autospec=True)
         self.addCleanup(popen_patcher.stop)
         self.popen = popen_patcher.start()
-        self._set_command_result()
+        self.patch_shellcommand_result()
 
 
 class ExitCodeCheckerTestCase(CheckerTestCase):
@@ -65,19 +65,19 @@ class ExitCodeCheckerTestCase(CheckerTestCase):
         task = CheckerTask('taskname', 'command')
         result = task()
         expected_result = CheckResult('taskname')
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
     def test_CheckResult_has_error_status_if_command_fails(self):
         """Task should fail if command exits with non zero status"""
         task = CheckerTask('taskname', 'command')
         errmsg = 'error message'
 
-        self._set_command_result(stdout=errmsg, returncode=1)
+        self.patch_shellcommand_result(stdout=errmsg, returncode=1)
         result = task()
 
         expected_result = CheckResult('taskname', CheckResult.ERROR,
                                       message=errmsg)
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
     def test_task_accepts_config(self):
         config = {'option': 'value'}
@@ -145,8 +145,33 @@ class CustomResultCreatorTestCase(CheckerTestCase):
 
     def test_pass_if_code_rate_is_10(self):
         """Test if result is determined by function assigned to result_creator attribute."""
+        expected_summary = 'expected summary'
+        def result_creator(task, _1, _2):
+            return CheckResult(task.taskname, summary=expected_summary)
         shell_output = _create_pylint_output(10)
-        self._set_command_result(stdout=shell_output)
+        self.patch_shellcommand_result(stdout=shell_output)
+        taskname = 'dummy'
+
+        task = _create_pylint_task(taskname=taskname)
+        task.result_creator = result_creator
+        result = task()
+
+        expected_result = CheckResult(taskname, summary=expected_summary)
+        assert_checkresult_equal(expected_result, result)
+
+
+class PylintResultCreatorTestCase(CheckerTestCase):
+    """Test :class:`codechecker.checker.task.Task`.
+
+    This class test SUT in terms of determining result by custom result creator.
+    Result creator is function which accepts Task object, shell return code,
+    stdout and creates :class:`codechecker.checker.task.CheckResult`.
+    """
+
+    def test_pass_if_code_rate_is_10(self):
+        """Test if result is determined by function assigned to result_creator attribute."""
+        shell_output = _create_pylint_output(10)
+        self.patch_shellcommand_result(stdout=shell_output)
         taskname = 'pylint'
 
         task = _create_pylint_task(taskname=taskname)
@@ -154,7 +179,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
         result = task()
 
         expected_result = CheckResult(taskname)
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
     def test_result_is_warning_if_code_rate_is_between_accepted_and_10(self):
         """Test if config is accessible by result_creator function."""
@@ -163,7 +188,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
                     'filename.py:10: other warning')
         code_rate = 8.5
         shell_output = _create_pylint_output(code_rate, messages)
-        self._set_command_result(stdout=shell_output)
+        self.patch_shellcommand_result(stdout=shell_output)
 
         config = {'accepted-code-rate': 8}
         task = _create_pylint_task(taskname=dummy_taskname, config=config)
@@ -174,7 +199,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
                                       CheckResult.WARNING,
                                       'Code Rate 8.50/10',
                                       '\n'.join(messages))
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
 
     def test_result_is_error_if_code_rate_is_below_accepted(self):
@@ -183,7 +208,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
                     'filename.py:10: other warning')
         code_rate = 8
         shell_output = _create_pylint_output(code_rate, messages)
-        self._set_command_result(stdout=shell_output)
+        self.patch_shellcommand_result(stdout=shell_output)
 
         task = _create_pylint_task(taskname=dummy_taskname)
         task.result_creator = create_pylint_result
@@ -193,16 +218,16 @@ class CustomResultCreatorTestCase(CheckerTestCase):
                                       CheckResult.ERROR,
                                       'Failed: Code Rate 8.00/10',
                                       '\n'.join(messages))
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
 
-class UnittestCheckerTestCase(CheckerTestCase):
+class UnittestPylintResultCreatorTestCase(CheckerTestCase):
 
     def test_unittest_skipped_tests(self):
         dummy_taskname = 'unittest'
         lines = ('ignored line', 'Ran 26 tests in 0.263s', 'OK (skipped=1)')
         shell_output = '\n'.join(lines)
-        self._set_command_result(stdout=shell_output)
+        self.patch_shellcommand_result(stdout=shell_output)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
         task.result_creator = create_pyunittest_result
@@ -211,13 +236,13 @@ class UnittestCheckerTestCase(CheckerTestCase):
         expected_result = CheckResult(dummy_taskname,
                                       CheckResult.WARNING,
                                       'Ran 26 tests in 0.263s - OK (skipped=1)')
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
     def test_unittest_errors(self):
         dummy_taskname = 'unittest'
         lines = ('ignored line', 'FAILED (errors=2)')
         shell_output = '\n'.join(lines)
-        self._set_command_result(stdout=shell_output, returncode=1)
+        self.patch_shellcommand_result(stdout=shell_output, returncode=1)
 
         task = CheckerTask(dummy_taskname, 'dummy-command')
         task.result_creator = create_pyunittest_result
@@ -226,7 +251,7 @@ class UnittestCheckerTestCase(CheckerTestCase):
         expected_result = CheckResult(dummy_taskname,
                                       CheckResult.ERROR,
                                       'FAILED (errors=2)')
-        _assert_checkresult_equal(expected_result, result)
+        assert_checkresult_equal(expected_result, result)
 
 
 class CheckResultTestCase(unittest.TestCase):
@@ -246,10 +271,10 @@ class CheckResultTestCase(unittest.TestCase):
             summary=None,
             message=None
         )
-        _assert_checkresult_equal(expected_checker_result, checker_result)
+        assert_checkresult_equal(expected_checker_result, checker_result)
 
 
-def _assert_checkresult_equal(first, second):
+def assert_checkresult_equal(first, second):
     """Check equality of :class:`codechekcer.checker.task.CheckResult`.
 
     Check if two passed arguments are
