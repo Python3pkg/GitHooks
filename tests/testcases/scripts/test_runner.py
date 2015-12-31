@@ -10,7 +10,7 @@ from codechecker import git
 from codechecker.checkers_definition import (PROJECT_CHECKERS,
                                            FILE_CHECKERS)
 from codechecker.result_creators import create_pylint_result
-from tests.testcases.scripts.fakefs_testcase import FakeFSTestCase
+from tests.testcases.scripts import FakeFSTestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
 
