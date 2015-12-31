@@ -11,8 +11,8 @@ from codechecker import worker
 from codechecker import git
 from codechecker.checker.builder import (CheckListBuilder,
                                          TaskCreator)
-from codechecker.concrete_checkers import (PROJECT_CHECKERS,
-                                           FILE_CHECKERS)
+from codechecker.checkers_definition import (PROJECT_CHECKERS,
+                                             FILE_CHECKERS)
 
 
 def main():

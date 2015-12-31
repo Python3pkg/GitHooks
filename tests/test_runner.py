@@ -7,9 +7,9 @@ import yaml
 from codechecker.scripts import runner
 from codechecker.checker.task import Task
 from codechecker import git
-from codechecker.concrete_checkers import (PROJECT_CHECKERS,
+from codechecker.checkers_definition import (PROJECT_CHECKERS,
                                            FILE_CHECKERS)
-from codechecker.concrete_checkers import create_pylint_result
+from codechecker.checkers_definition import create_pylint_result
 from tests.testcase import TestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
