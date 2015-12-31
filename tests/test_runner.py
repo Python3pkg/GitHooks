@@ -436,10 +436,6 @@ class RunnerTestCase(TestCase):
                 checker_definition[fieldname] = value
 
 
-def _create_pylint_task(command, taskname='dummy', config=None):
-    return Task(taskname, command, config)
-
-
 def _is_tasks_equal(expected, actual):
     # pylint: disable=protected-access
     """Check is two Task objects are equal."""
@@ -451,5 +447,4 @@ def _is_tasks_equal(expected, actual):
         expected.result_creator == actual.result_creator
 
 
-UnOrderedCollectionMatcher.register_equalityfunc(Task,
-                                                 _is_tasks_equal)
+UnOrderedCollectionMatcher.register_equalityfunc(Task, _is_tasks_equal)
