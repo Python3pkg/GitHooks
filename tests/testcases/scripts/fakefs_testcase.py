@@ -3,7 +3,7 @@ import os
 import fake_filesystem_unittest
 
 
-class TestCase(fake_filesystem_unittest.TestCase):
+class FakeFSTestCase(fake_filesystem_unittest.TestCase):
     """Base class for test cases relies on file system structure"""
 
     def _create_file_structure(self, file_structure):

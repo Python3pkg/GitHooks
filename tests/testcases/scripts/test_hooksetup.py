@@ -1,12 +1,12 @@
 """Test installation of pre-commit hook"""
 import os
 from os import path
-from tests.testcase import TestCase
+from tests.testcases.scripts.fakefs_testcase import FakeFSTestCase
 
 from codechecker.scripts import hooksetup as setup
 
 
-class TestHookSetup(TestCase):
+class TestHookSetup(FakeFSTestCase):
     """Test installation of pre-commit hook"""
     def setUp(self):
         self.setUpPyfakefs()

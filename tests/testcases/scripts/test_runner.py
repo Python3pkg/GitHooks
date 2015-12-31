@@ -10,11 +10,11 @@ from codechecker import git
 from codechecker.checkers_definition import (PROJECT_CHECKERS,
                                            FILE_CHECKERS)
 from codechecker.result_creators import create_pylint_result
-from tests.testcase import TestCase
+from tests.testcases.scripts.fakefs_testcase import FakeFSTestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
 
-class RunnerTestCase(TestCase):
+class RunnerTestCase(FakeFSTestCase):
     # pylint: disable=no-member
     """Test cases for code checker runner
 
