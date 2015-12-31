@@ -5,42 +5,49 @@ checkers tasks.
 """
 
 
-from codechecker.result_creators import create_pylint_result
+from codechecker.result_creators import (create_pylint_result,
+                                         create_pyunittest_result)
+
+
+TASKNAME, COMMAND, DEFAULTCONFIG, COMMAND_OPTIONS, RESULT_CREATOR = \
+    'taskname', 'command', 'defaultconfig', \
+    'command_options', 'result_creator'
 
 
 PROJECT_CHECKERS = {
     'unittest': {
-        'taskname': 'python unittest',
-        'command': 'python -m unittest discover .'
+        TASKNAME: 'python unittest',
+        COMMAND: 'python -m unittest discover .',
+        RESULT_CREATOR: create_pyunittest_result
     }
 }
 
 
 FILE_CHECKERS = {
     'pep8': {
-        'taskname': 'PEP8 ${file_relpath}',
-        'command': 'pep8 ${file_abspath}'
+        TASKNAME: 'PEP8 ${file_relpath}',
+        COMMAND: 'pep8 ${file_abspath}'
     },
     'pep257': {
-        'taskname': 'PEP257 ${file_relpath}',
-        'command': 'pep257 ${file_abspath}'
+        TASKNAME: 'PEP257 ${file_relpath}',
+        COMMAND: 'pep257 ${file_abspath}'
     },
     'jshint': {
-        'taskname': 'JSHint ${file_relpath}',
-        'command': 'jshint ${options} ${file_abspath}',
-        'defaultconfig': {
+        TASKNAME: 'JSHint ${file_relpath}',
+        COMMAND: 'jshint ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
             'config': '.jshintrc'
         },
-        'command_options': {'config': '--config ${value}'}
+        COMMAND_OPTIONS: {'config': '--config ${value}'}
     },
     'pylint': {
-        'taskname': 'Pylint ${file_relpath}',
-        'command': 'pylint -f parseable ${file_abspath} ${options}',
-        'defaultconfig': {
+        TASKNAME: 'Pylint ${file_relpath}',
+        COMMAND: 'pylint -f parseable ${file_abspath} ${options}',
+        DEFAULTCONFIG: {
             'rcfile': None,
             'accepted-code-rate': 9
         },
-        'command_options': {'rcfile': '--rcfile=${value}'},
-        'result_creator': create_pylint_result
+        COMMAND_OPTIONS: {'rcfile': '--rcfile=${value}'},
+        RESULT_CREATOR: create_pylint_result
     }
 }

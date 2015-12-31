@@ -52,11 +52,12 @@ def create_pyunittest_result(task, returncode, shell_output) -> CheckResult:
 
     if returncode != 0:
         status = CheckResult.ERROR
-        summary = summary_match[0] if summary_match else 'Errors'
+        summary = test_number_summary + (summary_match[0]
+                                         if summary_match else 'Failed')
     elif summary_match:
         status = CheckResult.WARNING
-        summary = summary_match[0]
+        summary = test_number_summary + summary_match[0]
     else:
         status = CheckResult.SUCCESS
-        summary = None
-    return CheckResult(task.taskname, status, test_number_summary + summary)
+        summary = test_number_summary + 'OK'
+    return CheckResult(task.taskname, status, summary)
