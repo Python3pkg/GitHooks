@@ -65,5 +65,18 @@ FILE_CHECKERS = {
         },
         COMMAND_OPTIONS: {'rcfile': '--rcfile=${value}'},
         RESULT_CREATOR: create_pylint_result
+    },
+    'phpcs': {
+        TASKNAME: 'PHPCS ${file_relpath}',
+        COMMAND: '${executable} ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
+            'executable': 'phpcs',
+            'encoding': 'utf-8',
+            'standard': None
+        },
+        COMMAND_OPTIONS: {
+            'standard': '--standard=${value}',
+            'encoding': '--encoding=${value}'
+        }
     }
 }
