@@ -199,6 +199,7 @@ class RunnerTestCase(FakeFSTestCase):
                 'tests/*.py': ['pep8']
             }
         })
+        
         staged_files = ['module.py',
                         'tests/module2.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
@@ -208,6 +209,11 @@ class RunnerTestCase(FakeFSTestCase):
             command='pylint -f parseable ${file_abspath} ${options}',
             defaultconfig=pylint_config,
             command_options={'rcfile': '--rcfile=${value}'}
+        )
+        self.patch_checker_definition(
+            'pep8',
+            taskname='PEP8 ${file_relpath}',
+            command='pep8 ${file_abspath}'
         )
 
         runner.main()

@@ -10,10 +10,8 @@ from codechecker.result_creators import (create_pylint_result,
                                          create_phpunit_result)
 
 
-TASKNAME, COMMAND, DEFAULTCONFIG, COMMAND_OPTIONS, RESULT_CREATOR, \
-    COMMAND_OPTIONS_ORDER, REQUIRED_OPTIONS = \
-    'taskname', 'command', 'defaultconfig', 'command_options', \
-    'result_creator', 'command_options_order', 'required_options'
+TASKNAME, COMMAND, DEFAULTCONFIG, COMMAND_OPTIONS, RESULT_CREATOR = \
+    'taskname', 'command', 'defaultconfig', 'command_options', 'result_creator'
 
 
 PROJECT_CHECKERS = {
@@ -53,11 +51,59 @@ PROJECT_CHECKERS = {
 FILE_CHECKERS = {
     'pep8': {
         TASKNAME: 'PEP8 ${file_relpath}',
-        COMMAND: 'pep8 ${file_abspath}'
+        COMMAND: 'pep8 ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
+            'config': None,
+            'quiet': None,
+            'qq': None,
+            'first': None,
+            'select': None,
+            'ignore': None,
+            'show-source': None,
+            'show-pep8': None,
+            'statistics': None,
+            'count': None,
+            'max-line-length': None,
+            'hang-closing': None,
+            'format': None
+        },
+        COMMAND_OPTIONS: {
+            'quiet': '--quiet',
+            'qq': '-qq',
+            'first': '--first',
+            'select': '--select=${value}',
+            'ignore': '--ignore=${value}',
+            'show-source': '--show-source',
+            'show-pep8': '--show-pep8',
+            'statistics': '--statistics',
+            'count': '--count',
+            'max-line-length': '--max-line-length=${value}',
+            'hang-closing': '--hang-closing',
+            'format': '--format=${value}',
+            'config': '--config=${value}'
+        }
     },
     'pep257': {
         TASKNAME: 'PEP257 ${file_relpath}',
-        COMMAND: 'pep257 ${file_abspath}'
+        COMMAND: 'pep257 ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
+            'count': None,
+            'select': None,
+            'ignore': None,
+            'add-select': None,
+            'add-ignore': None,
+            'explain': None,
+            'source': None
+        },
+        COMMAND_OPTIONS: {
+            'count': '--count=${value}',
+            'select': '--select=${value}',
+            'ignore': '--ignore=${value}',
+            'add-select': '--add-select=${value}',
+            'add-ignore': '--add-ignore=${value}',
+            'explain': '--explain',
+            'source': '--source'
+        }
     },
     'jshint': {
         TASKNAME: 'JSHint ${file_relpath}',
