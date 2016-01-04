@@ -35,6 +35,17 @@ PROJECT_CHECKERS = {
             'directory': '${value}'
         },
         RESULT_CREATOR: create_phpunit_result
+    },
+    'intern': {
+        TASKNAME: 'INTERN',
+        COMMAND: '${executable} ${config}',
+        DEFAULTCONFIG: {
+            'executable': 'intern-client',
+            'config': None
+        },
+        COMMAND_OPTIONS: {
+            'config': 'config=${value}'
+        }
     }
 }
 
