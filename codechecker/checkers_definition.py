@@ -50,9 +50,10 @@ FILE_CHECKERS = {
     },
     'jshint': {
         TASKNAME: 'JSHint ${file_relpath}',
-        COMMAND: 'jshint ${options} ${file_abspath}',
+        COMMAND: '${executable} ${options} ${file_abspath}',
         DEFAULTCONFIG: {
-            'config': '.jshintrc'
+            'config': None,
+            'executable': 'jshint'
         },
         COMMAND_OPTIONS: {'config': '--config ${value}'}
     },
