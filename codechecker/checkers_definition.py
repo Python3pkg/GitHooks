@@ -57,6 +57,23 @@ FILE_CHECKERS = {
         },
         COMMAND_OPTIONS: {'config': '--config ${value}'}
     },
+    'jscs': {
+        TASKNAME: 'JSCS ${file_relpath}',
+        COMMAND: '${executable} ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
+            'executable': 'jscs',
+            'config': None,
+            'preset': None,
+            'esnext': None,
+            'es3': None
+        },
+        COMMAND_OPTIONS: {
+            'config': '--config ${value}',
+            'preset': '--preset ${value}',
+            'esnext': '--esnext',
+            'es3': '--es3'
+        }
+    },
     'pylint': {
         TASKNAME: 'Pylint ${file_relpath}',
         COMMAND: 'pylint -f parseable ${file_abspath} ${options}',

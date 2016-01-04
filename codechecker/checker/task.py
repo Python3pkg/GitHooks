@@ -112,7 +112,7 @@ class Task:
                 self.command_options[each_option]
             )
             options.append(
-                option_pattern.substitute(value=quote(option_value))
+                option_pattern.substitute(value=quote(str(option_value)))
             )
         space_separated_options = ' '.join(options)
         options_mapping = {}
@@ -134,7 +134,7 @@ class Task:
                 self.command_options[each_option]
             )
             options_mapping[each_option] = \
-                option_pattern.substitute(value=quote(option_value))
+                option_pattern.substitute(value=quote(str(option_value)))
 
         command_string = self._command.substitute(
             options_mapping
