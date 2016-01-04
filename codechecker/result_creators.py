@@ -50,14 +50,54 @@ def create_pyunittest_result(task, returncode, shell_output) -> CheckResult:
     test_number_summary = \
         ran_tests_match[0] + ' - ' if ran_tests_match else ''
 
+    message = None
     if returncode != 0:
         status = CheckResult.ERROR
         summary = test_number_summary + (summary_match[0]
                                          if summary_match else 'Failed')
+        message = shell_output
     elif summary_match:
         status = CheckResult.WARNING
         summary = test_number_summary + summary_match[0]
     else:
         status = CheckResult.SUCCESS
         summary = test_number_summary + 'OK'
-    return CheckResult(task.taskname, status, summary)
+    return CheckResult(task.taskname, status, summary, message)
+
+
+_RE_PHPUNIT_RESOURCES = re.compile(
+    r'^Time: \d+ ms, Memory: [0-9\.]+(?:Mb|Gb)$',
+    re.MULTILINE
+)
+_RE_PHPUNIT_SKIPPED_TESTS = re.compile(
+    r'^OK, but incomplete, skipped, or risky tests!$',
+    re.MULTILINE
+)
+_RE_PHPUNIT_SUMMARY = re.compile(
+    r'^Tests: \d+, Assertions: \d+.+$',
+    re.MULTILINE
+)
+
+
+def create_phpunit_result(task, returncode, stdout) -> CheckResult:
+    """Create python unittest checker result.
+
+    In addition to return code, this function checks if there are
+    skipped tests. If skipped tests are found result has WARNING status.
+    Also additional informations are displayed in summary
+    (ran tests, skipped tests, errors, failures, resources)
+    """
+    skipped_tests_match = _RE_PHPUNIT_SKIPPED_TESTS.findall(stdout)
+    summary_match = _RE_PHPUNIT_SUMMARY.findall(stdout)
+    resources_match = _RE_PHPUNIT_RESOURCES.findall(stdout)
+
+    summary = resources_match[0] + ' - ' + summary_match[0]
+    message = None
+    if returncode != 0:
+        status = CheckResult.ERROR
+        message = stdout
+    elif skipped_tests_match:
+        status = CheckResult.WARNING
+    else:
+        status = CheckResult.SUCCESS
+    return CheckResult(task.taskname, status, summary, message)

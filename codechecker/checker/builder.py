@@ -147,6 +147,7 @@ class TaskCreator:
         else:
             taskname = self._taskname.template
             command = self._command.template
+
         task = Task(taskname, command, config)
         if self._command_options:
             task.command_options = self._command_options

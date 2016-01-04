@@ -80,7 +80,7 @@ class Task:
         """Create representation of Task."""
         return '<Task({}): command={}, config={}>'.format(
             self.taskname,
-            repr(' '.join(self._build_command())),
+            repr(' '.join([quote(opt) for opt in self._build_command()])),
             repr(self.config)
         )
 
@@ -106,7 +106,7 @@ class Task:
         options = []
         for each_option in self.command_options:
             option_value = self.config[each_option]
-            if not option_value:
+            if option_value is None:
                 continue
             option_pattern = Template(
                 self.command_options[each_option]
@@ -115,9 +115,29 @@ class Task:
                 option_pattern.substitute(value=quote(option_value))
             )
         space_separated_options = ' '.join(options)
+        options_mapping = {}
+        options_mapping['options'] = space_separated_options
+
+        if 'executable' in self.config:
+            options_mapping['executable'] = self.config['executable']
+
+        for each_option in self.command_options:
+            option_value = self.config[each_option]
+            if option_value is None:
+                # Command options which config option is None
+                # should not be passed to command.
+                # Its placeholder should be replaced to empty string
+                options_mapping[each_option] = ''
+                continue
+
+            option_pattern = Template(
+                self.command_options[each_option]
+            )
+            options_mapping[each_option] = \
+                option_pattern.substitute(value=quote(option_value))
 
         command_string = self._command.substitute(
-            options=space_separated_options
+            options_mapping
         )
         return split(command_string)
 

@@ -333,7 +333,7 @@ class RunnerTestCase(FakeFSTestCase):
         self.patch_checker_definition(
             'pylint',
             taskname='Pylint ${file_relpath}',
-            command='pylint -f parseable ${file_abspath} ${options}',
+            command='pylint -f parseable ${file_abspath} ${rcfile}',
             defaultconfig={
                 'rcfile': None,
                 'accepted-code-rate': 9

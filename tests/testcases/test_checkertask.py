@@ -134,6 +134,80 @@ class BuildShellCommandTestCase(CheckerTestCase):
         expected_command = "jshint --config '.jshint rc' /path/to/file.js"
         self.assert_shell_command_executed(expected_command)
 
+    def test_shell_executable_can_be_configured(self):
+        command_pattern = '${executable} ${options}'
+        config = {
+            'executable': 'path/to/phpunit'
+        }
+
+        task = CheckerTask('dummy', command_pattern, config)
+        task()
+
+        expected_command = 'path/to/phpunit'
+        self.assert_shell_command_executed(expected_command)
+
+    def test_empty_string_is_valid_command_option(self):
+        command_pattern = 'command ${options}'
+        config = {
+            'config': ''
+        }
+
+        task = CheckerTask('dummy', command_pattern, config)
+        task.command_options = {
+            'config': '--config ${value}'
+        }
+        task()
+
+        expected_command = "command --config ''"
+        self.assert_shell_command_executed(expected_command)
+
+    def test_command_options_can_be_passed_directly_to_command_pattern(self):
+        command_pattern = 'command ${opt1} ${opt2}'
+        config = {
+            'opt1': 'val1',
+            'opt2': 'val2'
+        }
+
+        task = CheckerTask('dummy', command_pattern, config)
+        task.command_options = {
+            'opt1': '--opt1 ${value}',
+            'opt2': '${value}'
+        }
+        task()
+
+        expected_command = 'command --opt1 val1 val2'
+        self.assert_shell_command_executed(expected_command)
+
+    def test_option_is_not_passed_to_command_if_its_config_option_is_none(self):
+        command_pattern = 'command ${opt}'
+        config = {
+            'opt': None
+        }
+
+        task = CheckerTask('dummy', command_pattern, config)
+        task.command_options = {
+            'opt': '--opt1 ${value}'
+        }
+        task()
+
+        expected_command = 'command'
+        self.assert_shell_command_executed(expected_command)
+
+    def test_option_is_not_passed_to_command_if_its_config_option_is_none2(self):
+        command_pattern = 'command ${options}'
+        config = {
+            'opt': None
+        }
+
+        task = CheckerTask('dummy', command_pattern, config)
+        task.command_options = {
+            'opt': '--opt1 ${value}'
+        }
+        task()
+
+        expected_command = 'command'
+        self.assert_shell_command_executed(expected_command)
+
 
 class CustomResultCreatorTestCase(CheckerTestCase):
     """Test :class:`codechecker.checker.task.Task`.
@@ -146,7 +220,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
     def test_pass_if_code_rate_is_10(self):
         """Test if result is determined by function assigned to result_creator attribute."""
         expected_summary = 'expected summary'
-        def result_creator(task, _1, _2):
+        def result_creator(task, *_):
             return CheckResult(task.taskname, summary=expected_summary)
         shell_output = _create_pylint_output(10)
         self.patch_shellcommand_result(stdout=shell_output)
@@ -250,7 +324,8 @@ class UnittestPylintResultCreatorTestCase(CheckerTestCase):
 
         expected_result = CheckResult(dummy_taskname,
                                       CheckResult.ERROR,
-                                      'FAILED (errors=2)')
+                                      'FAILED (errors=2)',
+                                      shell_output)
         assert_checkresult_equal(expected_result, result)
 
 

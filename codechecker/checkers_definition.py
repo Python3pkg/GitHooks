@@ -6,19 +6,35 @@ checkers tasks.
 
 
 from codechecker.result_creators import (create_pylint_result,
-                                         create_pyunittest_result)
+                                         create_pyunittest_result,
+                                         create_phpunit_result)
 
 
-TASKNAME, COMMAND, DEFAULTCONFIG, COMMAND_OPTIONS, RESULT_CREATOR = \
-    'taskname', 'command', 'defaultconfig', \
-    'command_options', 'result_creator'
+TASKNAME, COMMAND, DEFAULTCONFIG, COMMAND_OPTIONS, RESULT_CREATOR, \
+    COMMAND_OPTIONS_ORDER, REQUIRED_OPTIONS = \
+    'taskname', 'command', 'defaultconfig', 'command_options', \
+    'result_creator', 'command_options_order', 'required_options'
 
 
 PROJECT_CHECKERS = {
     'unittest': {
-        TASKNAME: 'python unittest',
+        TASKNAME: 'PYTHON UNITTEST',
         COMMAND: 'python -m unittest discover .',
         RESULT_CREATOR: create_pyunittest_result
+    },
+    'phpunit': {
+        TASKNAME: 'PHPUNIT',
+        COMMAND: '${executable} ${bootstrap} ${directory}',
+        DEFAULTCONFIG: {
+            'executable': 'phpunit',
+            'directory': None,
+            'bootstrap': None
+        },
+        COMMAND_OPTIONS: {
+            'bootstrap': '--bootstrap ${value}',
+            'directory': '${value}'
+        },
+        RESULT_CREATOR: create_phpunit_result
     }
 }
 
