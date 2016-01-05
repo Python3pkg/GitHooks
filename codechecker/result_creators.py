@@ -4,24 +4,32 @@ import re
 from codechecker.checker.task import CheckResult
 
 
-_RE_CODE_RATE = re.compile(r'Your code has been rated at (-?[\d\.]+)/10')
+_RE_PYLINT_CODE_RATE = re.compile(
+    r'Your code has been rated at (-?[\d\.]+)/10'
+)
 _RE_PYLINT_MESSAGE = re.compile(
     r'^([a-zA-Z1-9_/]+\.py:\d+:.+)$', re.MULTILINE)
+_RE_PYLINT_RATE_CHANGE = re.compile(
+    r'\(previous run: [0-9\-\.]+/10, [0-9\-\.\+]+\)'
+)
 
 
 def create_pylint_result(task, _, shell_output) -> CheckResult:
     """Create check result for pylint checker."""
-    accepted_code_rate = task.config['accepted-code-rate']
-    actual_code_rate = float(_RE_CODE_RATE.findall(shell_output)[0])
+    actual_code_rate = float(_RE_PYLINT_CODE_RATE.findall(shell_output)[0])
     if actual_code_rate == 10:
         return CheckResult(task.taskname)
 
+    accepted_code_rate = task.config['accepted-code-rate']
     if actual_code_rate >= accepted_code_rate:
         status = CheckResult.WARNING
         summary = 'Code Rate {0:.2f}/10'.format(actual_code_rate)
     else:
         status = CheckResult.ERROR
         summary = 'Failed: Code Rate {0:.2f}/10'.format(actual_code_rate)
+    rate_change_match = _RE_PYLINT_RATE_CHANGE.findall(shell_output)
+    if rate_change_match:
+        summary = ' '.join((summary, rate_change_match[0]))
     messages = '\n'.join(_RE_PYLINT_MESSAGE.findall(shell_output))
     return CheckResult(task.taskname, status, summary, messages)
 
