@@ -82,7 +82,8 @@ _RE_PHPUNIT_SKIPPED_TESTS = re.compile(
     re.MULTILINE
 )
 _RE_PHPUNIT_SUMMARY = re.compile(
-    r'^Tests: \d+, Assertions: \d+.+$',
+    r'^(?:OK \(\d+ tests, \d+ assertions\)|'
+    r'(?:Tests: \d+, Assertions: \d+.+))$',
     re.MULTILINE
 )
 
@@ -95,11 +96,11 @@ def create_phpunit_result(task, returncode, stdout) -> CheckResult:
     Also additional informations are displayed in summary
     (ran tests, skipped tests, errors, failures, resources)
     """
-    skipped_tests_match = _RE_PHPUNIT_SKIPPED_TESTS.findall(stdout)
     summary_match = _RE_PHPUNIT_SUMMARY.findall(stdout)
+    skipped_tests_match = _RE_PHPUNIT_SKIPPED_TESTS.findall(stdout)
     resources_match = _RE_PHPUNIT_RESOURCES.findall(stdout)
-
-    summary = resources_match[0] + ' - ' + summary_match[0]
+    if not summary_match:
+        summary_match = skipped_tests_match
     message = None
     if returncode != 0:
         status = CheckResult.ERROR
@@ -108,4 +109,12 @@ def create_phpunit_result(task, returncode, stdout) -> CheckResult:
         status = CheckResult.WARNING
     else:
         status = CheckResult.SUCCESS
+    summary_parts = []
+    if summary_match:
+        summary_parts.append(summary_match[0])
+    if resources_match:
+        summary_parts.append(resources_match[0])
+    if not summary_parts and status is CheckResult.ERROR:
+        summary_parts.append('FAILED')
+    summary = ' - '.join(summary_parts)
     return CheckResult(task.taskname, status, summary, message)

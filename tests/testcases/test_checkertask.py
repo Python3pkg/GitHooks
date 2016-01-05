@@ -9,7 +9,8 @@ from subprocess import (PIPE,
 from codechecker.checker.task import (Task as CheckerTask,
                                       CheckResult)
 from codechecker.result_creators import (create_pylint_result,
-                                         create_pyunittest_result)
+                                         create_pyunittest_result,
+                                         create_phpunit_result)
 
 
 class CheckerTestCase(unittest.TestCase):
@@ -213,6 +214,7 @@ class CustomResultCreatorTestCase(CheckerTestCase):
     """Test :class:`codechecker.checker.task.Task`.
 
     This class test SUT in terms of determining result by custom result creator.
+
     Result creator is function which accepts Task object, shell return code,
     stdout and creates :class:`codechecker.checker.task.CheckResult`.
     """
@@ -295,7 +297,7 @@ class PylintResultCreatorTestCase(CheckerTestCase):
         assert_checkresult_equal(expected_result, result)
 
 
-class UnittestPylintResultCreatorTestCase(CheckerTestCase):
+class PythonUnittestResultCreatorTestCase(CheckerTestCase):
 
     def test_unittest_skipped_tests(self):
         dummy_taskname = 'unittest'
@@ -326,6 +328,86 @@ class UnittestPylintResultCreatorTestCase(CheckerTestCase):
                                       CheckResult.ERROR,
                                       'FAILED (errors=2)',
                                       shell_output)
+        assert_checkresult_equal(expected_result, result)
+
+
+class PHPUnitResultCreatorTestCase(CheckerTestCase):
+    def test_ok(self):
+        dummy_taskname = 'phpunit'
+        resource_summary = 'Time: 60 ms, Memory: 3.75Mb'
+        ran_tests_summary = 'OK (40 tests, 57 assertions)'
+        lines = ('dummy', resource_summary, ran_tests_summary)
+        stdout = '\n'.join(lines)
+        self.patch_shellcommand_result(stdout=stdout)
+
+        task = CheckerTask(dummy_taskname, 'dummy-command')
+        task.result_creator = create_phpunit_result
+        result = task()
+
+        expected_result = CheckResult(
+            dummy_taskname,
+            CheckResult.SUCCESS,
+            'OK (40 tests, 57 assertions) - Time: 60 ms, Memory: 3.75Mb'
+        )
+        assert_checkresult_equal(expected_result, result)
+
+    def test_skipped_tests(self):
+        dummy_taskname = 'phpunit'
+        resource_summary = 'Time: 60 ms, Memory: 3.75Mb'
+        ran_tests_summary = 'OK, but incomplete, skipped, or risky tests!'
+        lines = ('dummy', resource_summary, ran_tests_summary)
+        stdout = '\n'.join(lines)
+        self.patch_shellcommand_result(stdout=stdout)
+
+        task = CheckerTask(dummy_taskname, 'dummy-command')
+        task.result_creator = create_phpunit_result
+        result = task()
+
+        expected_result = CheckResult(
+            dummy_taskname,
+            CheckResult.WARNING,
+            'OK, but incomplete, skipped, or risky tests!' \
+            ' - Time: 60 ms, Memory: 3.75Mb'
+        )
+        assert_checkresult_equal(expected_result, result)
+
+    def test_failure(self):
+        dummy_taskname = 'phpunit'
+        resource_summary = 'Time: 60 ms, Memory: 3.75Mb'
+        ran_tests_summary = 'Tests: 40, Assertions: 55, ' \
+            'Failures: 1, Incomplete: 1.'
+        lines = ('dummy', resource_summary, ran_tests_summary)
+        stdout = '\n'.join(lines)
+        self.patch_shellcommand_result(stdout=stdout, returncode=1)
+
+        task = CheckerTask(dummy_taskname, 'dummy-command')
+        task.result_creator = create_phpunit_result
+        result = task()
+
+        expected_result = CheckResult(
+            dummy_taskname,
+            CheckResult.ERROR,
+            ran_tests_summary + ' - Time: 60 ms, Memory: 3.75Mb',
+            message=stdout
+        )
+        assert_checkresult_equal(expected_result, result)
+
+    def test_php_fatalerror(self):
+        dummy_taskname = 'phpunit'
+        lines = ('dummy', 'PHP Fatal error:  Error description ..')
+        stdout = '\n'.join(lines)
+        self.patch_shellcommand_result(stdout=stdout, returncode=1)
+
+        task = CheckerTask(dummy_taskname, 'dummy-command')
+        task.result_creator = create_phpunit_result
+        result = task()
+
+        expected_result = CheckResult(
+            dummy_taskname,
+            CheckResult.ERROR,
+            'FAILED',
+            message=stdout
+        )
         assert_checkresult_equal(expected_result, result)
 
 
