@@ -153,5 +153,16 @@ FILE_CHECKERS = {
             'standard': '--standard=${value}',
             'encoding': '--encoding=${value}'
         }
+    },
+    'rst-lint': {
+        TASKNAME: 'reST-lint ${file_relpath}',
+        COMMAND: '${executable} ${options} ${file_abspath}',
+        DEFAULTCONFIG: {
+            'executable': 'rst-lint',
+            'encoding': 'utf-8'
+        },
+        COMMAND_OPTIONS: {
+            'encoding': '--encoding ${value}'
+        }
     }
 }
