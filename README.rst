@@ -24,7 +24,8 @@ Every project-checker is executed only once during pre-commit check. Example of 
 
 Every `file-checker` can be executed for every file in git staging area (git index). See examples below.
 
-Currently supported checkers are:
+Currently supported checkers
+----------------------------
 
 - unittest:
    python unittest runner
@@ -49,7 +50,7 @@ precommit-checkers.yml Examples
      '*.py': [pylint, pep8]
      '*.js': 'jshint'
 
-If your `precommit-checkers.yml` is same as above, pre-commit check will execute python unittest for project, pylint and pep8 for *.py files and jshint for js files.
+If your `precommit-checkers.yml` is same as above, pre-commit check will execute python `unittest` for project, `pylint` and `pep8` for `*.py` files and jshint for js files.
 
 `pep8` and `jshint` checkers does not pass if at least one warning will occur. `pylint` does not pass if computed code rate is below `accepted_code_rate`, default `accepted_code_rate` is 9.
 

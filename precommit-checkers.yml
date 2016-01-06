@@ -1,6 +1,7 @@
 project-checkers: [unittest]
 file-checkers:
   '*.py': [pylint, pep8, pep257]
+  '*.rst': rst-lint
   'tests/*.py':
     - pylint: {rcfile: tests/pylintrc}
 config: 
