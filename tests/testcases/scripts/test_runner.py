@@ -377,6 +377,39 @@ class RunnerTestCase(FakeFSTestCase):
             UnOrderedCollectionMatcher([expected_checker])
         )
 
+    def test_single_checker_does_not_need_to_be_wrapped_in_list(self):
+        precommit_yaml_contents = yaml.dump({
+            'project-checkers': 'unittest',
+            'file-checkers': {
+                '*.py': 'pep8'
+            }
+        })
+        staged_files = ['module.py']
+        self.patch_git_repository(precommit_yaml_contents, staged_files)
+        self.patch_file_checker(
+            'pep8',
+            taskname='pep8',
+            command='dummy',
+        )
+        self.patch_project_checker('unittest',
+                                   taskname='unittest',
+                                   command='dummy')
+
+        runner.main()
+
+        expected_unittestchecker = Task(
+            'unittest',
+            'dummy'
+        )
+        expected_pep8checker = Task(
+            'pep8',
+            'dummy'
+        )
+        expected_checkers = [expected_unittestchecker, expected_pep8checker]
+        self.worker.execute_checkers.assert_called_once_with(
+            UnOrderedCollectionMatcher(expected_checkers)
+        )
+
     def test_script_exit_status_is_1_if_checker_fail(self):
         """If checker fail script should exit with code 1"""
         self.worker.execute_checkers.return_value = 1

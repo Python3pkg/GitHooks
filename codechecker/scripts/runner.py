@@ -45,13 +45,13 @@ def main():
 
 
 def _init_checkers_builder():
-    file_checkers = {}
     project_chekcers = {}
     for each_checker in PROJECT_CHECKERS:
         project_chekcers[each_checker] = TaskCreator(
             each_checker,
             **PROJECT_CHECKERS[each_checker]
         )
+    file_checkers = {}
     for each_checker in FILE_CHECKERS:
         file_checkers[each_checker] = TaskCreator(
             each_checker,
@@ -80,6 +80,8 @@ def _set_checkers_config(checklist_builder, config):
 
 def _create_project_checkers(checklist_builder, checkers):
     """Create project checkers."""
+    if isinstance(checkers, str):
+        checkers = [checkers]
     for each_checker in checkers:
         checklist_builder.add_project_checker(each_checker)
 
@@ -91,6 +93,8 @@ def _create_file_checkers(checklist_builder, checkers):
     patterns_sorted = _sort_file_patterns(checkers.keys())
     for path_pattern in patterns_sorted:
         checkers_list = checkers[path_pattern]
+        if isinstance(checkers_list, str):
+            checkers_list = [checkers_list]
         matched_files = set(fnmatch.filter(staged_files, path_pattern))
         # Exclude files that match more specific pattern
         files_to_check = matched_files - files_previously_matched
