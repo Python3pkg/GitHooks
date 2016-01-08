@@ -183,4 +183,236 @@ Git hooks setup
 Checkers details
 ----------------
 
-${checkers_details}
+phpunit
+#######
+
+.. table:: Result status
+
+   ======= ====================================================================
+    Status                             Description                             
+   ======= ====================================================================
+   SUCCESS If phpunit exit status is 0 (all tests passes)                      
+   WARNING If phpunit exit status is 0 and skipped or incomplete test are found
+   ERROR   If phpunit exit status is not 0 (some tests fail)                   
+   ======= ====================================================================
+
+.. table:: Default config
+
+   ========== ======= =========================================================
+     Option   Default                        Description                       
+   ========== ======= =========================================================
+   directory  null    If not null, pass <value> to phpunit command.            
+   executable phpunit Set phpunit executable path.                             
+   bootstrap  null    If not null, pass --bootstrap <value> to phpunit command.
+   ========== ======= =========================================================
+
+pep257
+######
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ======= =========================================================
+     Option   Default                        Description                       
+   ========== ======= =========================================================
+   add-select null    If not null, pass --add-select=<value> to pep257 command.
+   select     null    If not null, pass --select=<value> to pep257 command.    
+   count      null    If not null, pass --count=<value> to pep257 command.     
+   ignore     null    If not null, pass --ignore=<value> to pep257 command.    
+   explain    null    If not null, pass --explain to pep257 command.           
+   add-ignore null    If not null, pass --add-ignore=<value> to pep257 command.
+   source     null    If not null, pass --source to pep257 command.            
+   ========== ======= =========================================================
+
+pylint
+######
+
+.. table:: Result status
+
+   ======= =================================================================
+    Status                            Description                           
+   ======= =================================================================
+   SUCCESS If computed code rate is 10                                      
+   WARNING If computed code rate is greater or equal than accepted code rate
+   ERROR   If computed code rate is less than accepted code rate            
+   ======= =================================================================
+
+.. table:: Default config
+
+   ================== ======= =====================================================
+         Option       Default                      Description                     
+   ================== ======= =====================================================
+   rcfile             null    If not null, pass --rcfile=<value> to pylint command.
+   accepted-code-rate 9                                                            
+   ================== ======= =====================================================
+
+pep8
+####
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   =============== ======= ============================================================
+        Option     Default                         Description                         
+   =============== ======= ============================================================
+   select          null    If not null, pass --select=<value> to pep8 command.         
+   qq              null    If not null, pass -qq to pep8 command.                      
+   count           null    If not null, pass --count to pep8 command.                  
+   hang-closing    null    If not null, pass --hang-closing to pep8 command.           
+   max-line-length null    If not null, pass --max-line-length=<value> to pep8 command.
+   format          null    If not null, pass --format=<value> to pep8 command.         
+   config          null    If not null, pass --config=<value> to pep8 command.         
+   ignore          null    If not null, pass --ignore=<value> to pep8 command.         
+   first           null    If not null, pass --first to pep8 command.                  
+   show-pep8       null    If not null, pass --show-pep8 to pep8 command.              
+   quiet           null    If not null, pass --quiet to pep8 command.                  
+   statistics      null    If not null, pass --statistics to pep8 command.             
+   show-source     null    If not null, pass --show-source to pep8 command.            
+   =============== ======= ============================================================
+
+unittest
+########
+
+.. table:: Result status
+
+   ======= =======================================================
+    Status                       Description                      
+   ======= =======================================================
+   SUCCESS If unittest exit status is 0 (all tests passes)        
+   WARNING If unittest exit status is 0 and skipped test are found
+   ERROR   If unittest exit status is not 0 (some tests fail)     
+   ======= =======================================================
+
+.. table:: Default config
+
+   ====== ======= ===========
+   Option Default Description
+   ====== ======= ===========
+   ====== ======= ===========
+
+jshint
+######
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ======= =====================================================
+     Option   Default                      Description                     
+   ========== ======= =====================================================
+   config     null    If not null, pass --config <value> to jshint command.
+   executable jshint  Set jshint executable path.                          
+   ========== ======= =====================================================
+
+intern
+######
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ============= ===================================================
+     Option      Default                        Description                    
+   ========== ============= ===================================================
+   config     null          If not null, pass config=<value> to intern command.
+   executable intern-client Set intern executable path.                        
+   ========== ============= ===================================================
+
+jscs
+####
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ======= ===================================================
+     Option   Default                     Description                    
+   ========== ======= ===================================================
+   config     null    If not null, pass --config <value> to jscs command.
+   es3        null    If not null, pass --es3 to jscs command.           
+   preset     null    If not null, pass --preset <value> to jscs command.
+   executable jscs    Set jscs executable path.                          
+   esnext     null    If not null, pass --esnext to jscs command.        
+   ========== ======= ===================================================
+
+phpcs
+#####
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ======= ======================================================
+     Option   Default                      Description                      
+   ========== ======= ======================================================
+   standard   null    If not null, pass --standard=<value> to phpcs command.
+   executable phpcs   Set phpcs executable path.                            
+   encoding   utf-8   If not null, pass --encoding=<value> to phpcs command.
+   ========== ======= ======================================================
+
+rst-lint
+########
+
+.. table:: Result status
+
+   ======= =======================================
+    Status               Description              
+   ======= =======================================
+   SUCCESS If checker command exit status is 0    
+   ERROR   If checker command exit status is not 0
+   ======= =======================================
+
+.. table:: Default config
+
+   ========== ======== =========================================================
+     Option   Default                         Description                       
+   ========== ======== =========================================================
+   executable rst-lint Set rst-lint executable path.                            
+   encoding   utf-8    If not null, pass --encoding <value> to rst-lint command.
+   ========== ======== =========================================================
+
+
