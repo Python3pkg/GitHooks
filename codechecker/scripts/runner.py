@@ -12,7 +12,7 @@ from codechecker import git
 from codechecker.checker.builder import (CheckListBuilder,
                                          TaskCreator)
 from codechecker.checkers_spec import (PROJECT_CHECKERS,
-                                             FILE_CHECKERS)
+                                       FILE_CHECKERS)
 
 
 def main():

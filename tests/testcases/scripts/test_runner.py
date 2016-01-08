@@ -213,7 +213,7 @@ class RunnerTestCase(FakeFSTestCase):
                 'tests/*.py': ['pep8']
             }
         })
-        
+
         staged_files = ['module.py',
                         'tests/module2.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
@@ -464,7 +464,7 @@ class RunnerTestCase(FakeFSTestCase):
                            defaultconfig=None, command_options=None,
                            result_creator=None):
         # pylint: disable=too-many-arguments
-        FILE_CHECKERS[checkername] = self._create_checker_definition(
+        FILE_CHECKERS[checkername] = self._create_checker_spec(
             taskname,
             command,
             defaultconfig,
@@ -476,7 +476,7 @@ class RunnerTestCase(FakeFSTestCase):
                               command=None, defaultconfig=None,
                               command_options=None, result_creator=None):
         # pylint: disable=too-many-arguments
-        PROJECT_CHECKERS[checkername] = self._create_checker_definition(
+        PROJECT_CHECKERS[checkername] = self._create_checker_spec(
             taskname,
             command,
             defaultconfig,
@@ -484,11 +484,11 @@ class RunnerTestCase(FakeFSTestCase):
             result_creator
         )
 
-    def _create_checker_definition(self, taskname=None, command=None,
-                                   defaultconfig=None, command_options=None,
-                                   result_creator=None):
+    def _create_checker_spec(self, taskname=None, command=None,
+                             defaultconfig=None, command_options=None,
+                             result_creator=None):
         # pylint: disable=too-many-arguments
-        checker_definition = {}
+        checker_spec = {}
         fields_map = {
             TASKNAME: taskname,
             COMMAND: command,
@@ -500,8 +500,8 @@ class RunnerTestCase(FakeFSTestCase):
             value = fields_map[fieldname]
             if value is None:
                 continue
-            checker_definition[fieldname] = value
-        return checker_definition
+            checker_spec[fieldname] = value
+        return checker_spec
 
 def _is_tasks_equal(expected, actual):
     # pylint: disable=protected-access
