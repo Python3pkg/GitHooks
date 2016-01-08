@@ -11,7 +11,7 @@ from codechecker import worker
 from codechecker import git
 from codechecker.checker.builder import (CheckListBuilder,
                                          TaskCreator)
-from codechecker.checkers_definition import (PROJECT_CHECKERS,
+from codechecker.checkers_spec import (PROJECT_CHECKERS,
                                              FILE_CHECKERS)
 
 

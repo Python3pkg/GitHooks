@@ -7,13 +7,13 @@ import yaml
 from codechecker.scripts import runner
 from codechecker.checker.task import Task
 from codechecker import git
-from codechecker.checkers_definition import (PROJECT_CHECKERS,
-                                             FILE_CHECKERS)
-from codechecker.checkers_definition import (TASKNAME,
-                                             COMMAND,
-                                             DEFAULTCONFIG,
-                                             COMMAND_OPTIONS,
-                                             RESULT_CREATOR)
+from codechecker.checkers_spec import (PROJECT_CHECKERS,
+                                       FILE_CHECKERS)
+from codechecker.checkers_spec import (TASKNAME,
+                                       COMMAND,
+                                       DEFAULTCONFIG,
+                                       COMMAND_OPTIONS,
+                                       RESULT_CREATOR)
 from codechecker.result_creators import create_pylint_result
 from tests.testcases.scripts import FakeFSTestCase
 from tests.comparison import UnOrderedCollectionMatcher
