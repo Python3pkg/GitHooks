@@ -1,13 +1,13 @@
 code-checker
 ============
 
-Intro
+.. contents::
+
+About
 -----
 
-This app does any number of checks such as unittests or lint during pre-commit check.
+This app runs any number of checks such as unit tests or linters during pre-commit check.
 If at least one check will not pass, commit is aborted.
-
-Checkers can be also run by command `check-code`.
 
 Checkers are treated as jobs divided among couple of workers.
 Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process (on separate cpu core).
@@ -22,82 +22,128 @@ There are two categories of checkers: project-checkers and file-checker.
 
 Every project-checker is executed only once during pre-commit check. Example of project-checker is `unittest` - this checker is executed for whole project.
 
-Every `file-checker` can be executed for every file in git staging area (git index). See examples below.
+`file-checker` can be executed for files in git staging area (git index). See `Examples`_ below.
+
+Result of each checker has status which value is one of: `SUCCESS`, `WARNING` or `ERROR`. On `SUCCESS` and `WARNING` commit proceeds, on `ERROR` is aborted.
+
+If you want to run checkers without commiting changes use `check-code` command.
 
 Currently supported checkers
 ----------------------------
 
+Project checkers
+################
+
 - unittest:
-   python unittest runner
+   Python unittest
+- phpunit:
+   PHP unittest framework.
+- intern:
+   Test system for JavaScript.
+
+File checkers
+#############
+
 - pylint:
-   fail if pylint code rate is below `accepted_code_rate`
+   Pylint checker. Fail if code rate is below `accepted-code-rate`
 - pep8:
-   fail if pep8 show any message
+   Python PEP8 checker.
 - pep257:
-   fail if pep257 show any message
+   Python PEP257 checker.
+- phpcs:
+   PHP Code Sniffer: PHP coding standard linter.
 - jshint:
-   fail if jshint show any message
+   JSHint: JavaScript linter.
+- jscs:
+   JSCS - JavaScript code style linter
+- rst-lint:
+   A reStructuredText linter.
 
-In near future more checkers will be added, especially for php and js.
+Examples
+--------
 
-precommit-checkers.yml Examples
--------------------------------
+Below are example `precommit-checkers.yml` contents.
 
 .. code-block:: yaml
 
-   project-checkers: [unittest]
+   project-checkers: unittest
    file-checkers:
      '*.py': [pylint, pep8]
-     '*.js': 'jshint'
+     '*.js': jshint
 
 If your `precommit-checkers.yml` is same as above, pre-commit check will execute python `unittest` for project, `pylint` and `pep8` for `*.py` files and jshint for js files.
-
 `pep8` and `jshint` checkers does not pass if at least one warning will occur. `pylint` does not pass if computed code rate is below `accepted_code_rate`, default `accepted_code_rate` is 9.
+
+----
 
 .. code-block:: yaml
 
-   project-checkers: [unittest]
+   project-checkers: unittest
    file-checkers:
      '*.py': [pylint, pep8]
-     '*.js': 'jshint'
+     '*.js': jshint
    config: 
-     pylint: {accepted_code_rate: 8}
+     pylint: {accepted-code-rate: 8}
 
 This example shows how to set global configuration for specified checkers. Above configuration has similar effect as previous example but here accepted code rate computed by pylint is set to 8.
 
+----
+
 .. code-block:: yaml
 
-   project-checkers: [unittest]
+   project-checkers: unittest
    file-checkers:
      '*.py': [pylint, pep8]
      'tests/*.py':
-       - pylint: {accepted_code_rate: 8}
+       - pylint: {accepted-code-rate: 8}
    config: 
-     pylint: {accepted_code_rate: 9}
+     pylint: {accepted-code-rate: 9}
 
 Checker options can be set also for specific file pattern. In this example python modules under `tests/` directory will be checked by `pylint` with accepted code rate 8. Rest of python modules will be checkek by `pep8` and `pylint` with accepted code rate 9.
 
+----
+
 .. code-block:: yaml
 
-   project-checkers: [unittest]
+   project-checkers: unittest
    file-checkers:
      '*.py': [pylint, pep8]
      'tests/*.py':
        - pylint: {rcfile: tests/pylintrc}
 
-This shows how to set other pylintrc for tests modules
+This shows how to set custom `pylintrc` for tests modules
 
 How to set jshint rc file:
 
 .. code-block:: yaml
 
    file-checkers:
-     '*.js': [jshint]
+     '*.js': jshint
    config:
-     jshint: {'command-options': '--config .jshintrc'}
+     jshint: {config: .jshintrc}
 
+----
 
-See `Currently supported checkers`_
+Every previous examples assumes that checkers are installed globally in your system or active virtual environment.
+Some checkers accepts `executable` config option. Use this option if you want to select specific executable.
+
+.. code-block:: yaml
+
+   project-checkers: [phpunit, intern]
+   config:
+     phpunit: {
+       executable: vendor/phpunit/phpunit/phpunit,
+       bootstrap: tests/bootstrap.php,
+       directory: tests/TestSuite
+     },
+     intern: {
+       config: tests/config.js,
+       executable: node_modules/.bin/intern-client
+     }
+
+----
+
+See `Checkers details`_
 
 Installation
 ------------
@@ -122,9 +168,19 @@ Git hooks setup
 
 #. Install `code-checker` `Installation`_
 #. Change current working directory to git repository `cd /path/to/repository`
-#. Execute `setup-githooks`. This command creates pre-commit hook which run checkers defined in `precommit-checkers.yml`
+#. Execute `setup-githooks`. This command creates `pre-commit` hook which run checkers defined in `precommit-checkers.yml`
 
 .. note::
 
-   Make sure that every requirement of checkers (pylint, pep8, jshint etc.) are installed in your system or active virtual environment.
+   `setup-githooks` fail if `.git/hooks/pre-commit` already exists. You should delete it manually first.
+   Also if `precommit-checkers.yml` already exists `setup-githooks` leaves it untouched.
+
+.. note::
+
+   Make sure that every requirement of checkers (pylint, pep8, jshint etc.) are installed in your system, active virtual environment or project repository.
    You should install them manually.
+
+Checkers details
+----------------
+
+${checkers_details}

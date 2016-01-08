@@ -15,7 +15,20 @@ _RE_PYLINT_RATE_CHANGE = re.compile(
 
 
 def create_pylint_result(task, _, shell_output) -> CheckResult:
-    """Create check result for pylint checker."""
+    """Create check result for pylint checker.
+
+    .. list-table:: Result status
+       :header-rows: 1
+
+       * - Status
+         - Description
+       * - SUCCESS
+         - If computed code rate is 10
+       * - WARNING
+         - If computed code rate is greater or equal than accepted code rate
+       * - ERROR
+         - If computed code rate is less than accepted code rate
+    """
     actual_code_rate = float(_RE_PYLINT_CODE_RATE.findall(shell_output)[0])
     if actual_code_rate == 10:
         return CheckResult(task.taskname)
@@ -45,8 +58,18 @@ _RE_UNITTEST_TEST_NUMBER = re.compile(r'Ran \d+ tests in [0-9\.]+s')
 def create_pyunittest_result(task, returncode, shell_output) -> CheckResult:
     """Create python unittest checker result.
 
-    In addition to unittest return code, this function checks if there are
-    skipped tests. If skipped tests are found result has WARNING status.
+    .. list-table:: Result status
+       :header-rows: 1
+
+       * - Status
+         - Description
+       * - SUCCESS
+         - If unittest exit status is 0 (all tests passes)
+       * - WARNING
+         - If unittest exit status is 0 and skipped test are found
+       * - ERROR
+         - If unittest exit status is not 0 (some tests fail)
+
     Also additional informations are displayed in summary
     (ran tests, skipped tests, errors, failures)
     """
@@ -91,8 +114,18 @@ _RE_PHPUNIT_SUMMARY = re.compile(
 def create_phpunit_result(task, returncode, stdout) -> CheckResult:
     """Create python unittest checker result.
 
-    In addition to return code, this function checks if there are
-    skipped tests. If skipped tests are found result has WARNING status.
+    .. list-table:: Result status
+       :header-rows: 1
+
+       * - Status
+         - Description
+       * - SUCCESS
+         - If phpunit exit status is 0 (all tests passes)
+       * - WARNING
+         - If phpunit exit status is 0 and skipped or incomplete test are found
+       * - ERROR
+         - If phpunit exit status is not 0 (some tests fail)
+
     Also additional informations are displayed in summary
     (ran tests, skipped tests, errors, failures, resources)
     """

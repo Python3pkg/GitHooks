@@ -143,7 +143,18 @@ class Task:
 
 
 def create_result_by_returncode(task, returncode, shell_output) -> CheckResult:
-    """Create CheckResult based on shell return code."""
+    """Create CheckResult based on shell return code.
+
+    .. list-table:: Result status
+       :header-rows: 1
+
+       * - Status
+         - Description
+       * - SUCCESS
+         - If checker command exit status is 0
+       * - ERROR
+         - If checker command exit status is not 0
+    """
     if returncode == 0:
         return CheckResult(task.taskname)
     return CheckResult(task.taskname, CheckResult.ERROR, message=shell_output)
