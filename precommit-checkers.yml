@@ -4,5 +4,6 @@ file-checkers:
   '*.rst': rst-lint
   'tests/*.py':
     - pylint: {rcfile: tests/pylintrc}
+  'scripts/*.py': []
 config: 
   pylint: {accepted-code-rate: 9}
