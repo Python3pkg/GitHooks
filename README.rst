@@ -12,9 +12,13 @@ If at least one check will not pass, commit is aborted.
 Checkers are treated as jobs divided among couple of workers.
 Number of workers is equal to number of your cpu logical cores, every worker is executed in separate process (on separate cpu core).
 
-.. image:: https://cloud.githubusercontent.com/assets/898669/10948860/0dcede00-8330-11e5-8b14-5490c4a00d57.png
+.. image:: https://cloud.githubusercontent.com/assets/898669/12296209/797d36e4-ba06-11e5-9126-eae2d086473a.png
 
-.. image:: https://cloud.githubusercontent.com/assets/898669/10948864/16ba38b6-8330-11e5-85b8-02bb0332105b.png
+.. image:: https://cloud.githubusercontent.com/assets/898669/12296210/797fe2cc-ba06-11e5-9ca0-d62c44ba119a.png
+
+.. image:: https://cloud.githubusercontent.com/assets/898669/12296211/79891fc2-ba06-11e5-9c83-c6554454fa72.png
+
+.. image:: https://cloud.githubusercontent.com/assets/898669/12296208/7979196a-ba06-11e5-8328-5fac5e9912cf.png
 
 In `precommit-checkers.yml` you can configure which checkers checks which files and define checkers configuration. 
 
