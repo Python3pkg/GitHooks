@@ -4,7 +4,7 @@ from codechecker.result_creators import (create_pylint_result,
                                          create_phpunit_result)
 from codechecker.checker.task import (Task,
                                       CheckResult)
-from tests.testcases.testcase import (ShellTestCase,
+from tests.testsuite.testcase import (ShellTestCase,
                                       assert_checkresult_equal)
 
 

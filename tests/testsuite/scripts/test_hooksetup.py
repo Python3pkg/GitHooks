@@ -1,7 +1,7 @@
 """Test installation of pre-commit hook"""
 import os
 from os import path
-from tests.testcases.scripts import FakeFSTestCase
+from tests.testsuite.scripts import FakeFSTestCase
 
 from codechecker.scripts import hooksetup as setup
 

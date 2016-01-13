@@ -3,7 +3,7 @@ import unittest
 
 from codechecker.checker.task import (Task as CheckerTask,
                                       CheckResult)
-from tests.testcases.testcase import (ShellTestCase,
+from tests.testsuite.testcase import (ShellTestCase,
                                       assert_checkresult_equal)
 
 

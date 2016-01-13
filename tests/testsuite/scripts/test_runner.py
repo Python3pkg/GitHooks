@@ -15,7 +15,7 @@ from codechecker.checkers_spec import (TASKNAME,
                                        COMMAND_OPTIONS,
                                        RESULT_CREATOR)
 from codechecker.result_creators import create_pylint_result
-from tests.testcases.scripts import FakeFSTestCase
+from tests.testsuite.scripts import FakeFSTestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
 
@@ -38,7 +38,7 @@ class RunnerTestCase(FakeFSTestCase):
         self.addCleanup(worker_patcher.stop)
         self.worker = worker_patcher.start()
         self.worker.execute_checkers.return_value = 0
-        # patch checkers declaration
+        # patch checkers specification
         file_checkers_patch = mock.patch.dict(FILE_CHECKERS)
         self.addCleanup(file_checkers_patch.stop)
         file_checkers_patch.start()
