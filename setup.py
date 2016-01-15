@@ -12,7 +12,7 @@ with open(path.join(project_dir, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='code-checker',
-    version='0.2.1-1',
+    version='0.2.2',
     description='Run pre-commit code checkers',
     long_description=long_description,
     url='https://github.com/droslaw/GitHooks',
