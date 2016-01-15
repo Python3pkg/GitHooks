@@ -13,6 +13,12 @@ import sys
 from subprocess import Popen, PIPE
 
 
+class GitRepoNotFoundError(RuntimeError):
+    """Raised when git repository can not be found."""
+
+    pass
+
+
 def find_repository_dir(curdir):
     """Get git repository main directory path.
 
@@ -55,7 +61,6 @@ def get_staged_files():
     def normpath(file_relpath):
         """Get absolute path."""
         return file_relpath
-        return path.join(repository_path, file_relpath)
     repository_path = find_repository_dir(os.getcwd())
     git_args = 'git diff --staged --name-only'.split()
     git_process = Popen(git_args, stdout=PIPE)
@@ -66,9 +71,3 @@ def get_staged_files():
                              for f in git_process.stdout.readlines()]
                  if os.path.exists(f)]
     return file_list
-
-
-class GitRepoNotFoundError(RuntimeError):
-    """Raised when git repository can not be found."""
-
-    pass

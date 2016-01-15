@@ -4,6 +4,7 @@ from os import path
 from tests.testsuite.scripts import FakeFSTestCase
 
 from codechecker.scripts import hooksetup as setup
+from codechecker.git import GitRepoNotFoundError
 
 
 class TestHookSetup(FakeFSTestCase):
@@ -62,7 +63,6 @@ class TestHookSetup(FakeFSTestCase):
                          'setup-githook should not override existing'
                          ' precommit-checkers.yml')
 
-
     def test_setup_does_not_override_existing_hooks(self):
         precommit_hook_path = path.join(self.repo_path,
                                         '.git/hooks/pre-commit')
@@ -72,6 +72,15 @@ class TestHookSetup(FakeFSTestCase):
         self._create_file_structure(files_structure)
         os.chdir(self.repo_path)
         self.assertRaises(RuntimeError, setup.main)
+
+    def test_raise_error_if_repo_is_not_found(self):
+        file_path = path.join(self.repo_path, 'not_versioned_file')
+        files_structure = {
+            file_path: 'some contents',
+        }
+        self._create_file_structure(files_structure)
+        os.chdir(self.repo_path)
+        self.assertRaises(GitRepoNotFoundError, setup.main)
 
 
 PRECOMMIT_HOOK_EXPECTED = """check-code;
