@@ -25,11 +25,20 @@ def create_pylint_result(task, _, shell_output) -> CheckResult:
        * - SUCCESS
          - If computed code rate is 10
        * - WARNING
-         - If computed code rate is greater or equal than accepted code rate
+         - If computed code rate is greater or equal than accepted code rate or
+           pylint has not returned code rate
        * - ERROR
          - If computed code rate is less than accepted code rate
     """
-    actual_code_rate = float(_RE_PYLINT_CODE_RATE.findall(shell_output)[0])
+    messages = '\n'.join(_RE_PYLINT_MESSAGE.findall(shell_output))
+    try:
+        actual_code_rate = float(_RE_PYLINT_CODE_RATE.findall(shell_output)[0])
+    except IndexError:
+        # if pylint has not returned code rate
+        status = CheckResult.WARNING
+        summary = 'Code Rate UNKNOWN'
+        return CheckResult(task.taskname, status, summary, messages)
+
     if actual_code_rate == 10:
         return CheckResult(task.taskname)
 
@@ -43,7 +52,6 @@ def create_pylint_result(task, _, shell_output) -> CheckResult:
     rate_change_match = _RE_PYLINT_RATE_CHANGE.findall(shell_output)
     if rate_change_match:
         summary = ' '.join((summary, rate_change_match[0]))
-    messages = '\n'.join(_RE_PYLINT_MESSAGE.findall(shell_output))
     return CheckResult(task.taskname, status, summary, messages)
 
 

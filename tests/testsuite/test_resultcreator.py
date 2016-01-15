@@ -68,6 +68,23 @@ class PylintResultCreatorTestCase(ShellTestCase):
                                       '\n'.join(messages))
         assert_checkresult_equal(expected_result, result)
 
+    def test_result_is_warning_if_code_rate_is_not_returned_by_pylint(self):
+        dummy_taskname = 'pylint'
+        messages = ('filename.py:1: first warning',
+                    'filename.py:10: other warning')
+        shell_output = '\n'.join(messages)
+        self.patch_shellcommand_result(stdout=shell_output)
+
+        task = create_pylint_task(taskname=dummy_taskname)
+        task.result_creator = create_pylint_result
+        result = task()
+
+        expected_result = CheckResult(dummy_taskname,
+                                      CheckResult.WARNING,
+                                      'Code Rate UNKNOWN',
+                                      '\n'.join(messages))
+        assert_checkresult_equal(expected_result, result)
+
 
 class PythonUnittestResultCreatorTestCase(ShellTestCase):
 
