@@ -16,7 +16,7 @@ Exceptions:
 import copy
 from string import Template
 
-from codechecker.checker.task import Task
+from codechecker.task.task import Task
 from codechecker import git
 
 
@@ -124,7 +124,7 @@ class CheckListBuilder:
 
 
 class TaskCreator:
-    """Create :class:`codechecker.checker.task.Task` objects."""
+    """Create :class:`codechecker.task.task.Task` objects."""
 
     def __init__(self, checkername, taskname, command, defaultconfig=None,
                  command_options=None, result_creator=None):

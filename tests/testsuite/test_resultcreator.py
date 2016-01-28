@@ -2,18 +2,18 @@
 from codechecker.result_creators import (create_pylint_result,
                                          create_pyunittest_result,
                                          create_phpunit_result)
-from codechecker.checker.task import (Task,
-                                      CheckResult)
+from codechecker.task.task import (Task,
+                                   CheckResult)
 from tests.testsuite.testcase import (ShellTestCase,
                                       assert_checkresult_equal)
 
 
 class PylintResultCreatorTestCase(ShellTestCase):
-    """Test :class:`codechecker.checker.task.Task`.
+    """Test :class:`codechecker.task.task.Task`.
 
     This class test SUT in terms of determining result by custom result creator.
     Result creator is function which accepts Task object, shell return code,
-    stdout and creates :class:`codechecker.checker.task.CheckResult`.
+    stdout and creates :class:`codechecker.task.task.CheckResult`.
     """
 
     def test_pass_if_code_rate_is_10(self):

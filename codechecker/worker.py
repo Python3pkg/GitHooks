@@ -6,7 +6,7 @@ Exports:
 """
 import multiprocessing as mp
 
-from codechecker.checker.task import CheckResult
+from codechecker.task.task import CheckResult
 
 
 WORKERS_COUNT = mp.cpu_count()

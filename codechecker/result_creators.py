@@ -1,7 +1,7 @@
 """Functions which create CheckResult objects."""
 import re
 
-from codechecker.checker.task import CheckResult
+from codechecker.task.task import CheckResult
 
 
 _RE_PYLINT_CODE_RATE = re.compile(

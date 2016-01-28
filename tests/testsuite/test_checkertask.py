@@ -1,16 +1,16 @@
-"""Test :mod:`codechecker.checker.task`."""
+"""Test :mod:`codechecker.task.task`."""
 import unittest
 
-from codechecker.checker.task import (Task as CheckerTask,
-                                      CheckResult)
+from codechecker.task.task import (Task as CheckerTask,
+                                   CheckResult)
 from tests.testsuite.testcase import (ShellTestCase,
                                       assert_checkresult_equal)
 
 
 class ExitCodeCheckerTestCase(ShellTestCase):
-    """Test :class:`codechecker.checker.task.Task`.
+    """Test :class:`codechecker.task.task.Task`.
 
-    Test if :class:`codechecker.checker.task.Task` executes correct shell
+    Test if :class:`codechecker.task.task.Task` executes correct shell
     commands and returns correct results.
 
     This class test SUT in terms of determining result based on shell command
@@ -25,7 +25,7 @@ class ExitCodeCheckerTestCase(ShellTestCase):
         self.assert_shell_command_executed('command')
 
     def test_task_returns_CheckResult(self):
-        """Checker task should return :class:`codechecker.checker.task.CheckResult`"""
+        """Checker task should return :class:`codechecker.task.task.CheckResult`"""
         # pylint: disable=no-self-use
         task = CheckerTask('taskname', 'command')
         result = task()
@@ -180,7 +180,7 @@ class CustomResultCreatorTestCase(ShellTestCase):
     """Test Task class properly uses custom result creator.
 
     Result creator is function which accepts Task object, shell return code,
-    stdout and creates :class:`codechecker.checker.task.CheckResult`.
+    stdout and creates :class:`codechecker.task.task.CheckResult`.
     """
 
     def test_pass_if_code_rate_is_10(self):
@@ -202,12 +202,12 @@ class CustomResultCreatorTestCase(ShellTestCase):
 class CheckResultTestCase(unittest.TestCase):
     """Test CheckResult default values.
 
-    Test if :class:`codechecker.checker.task.CheckResult` handles correct
+    Test if :class:`codechecker.task.task.CheckResult` handles correct
     informations.
     """
 
     def test_default_values(self):
-        """Test :class:`codechecker.checker.task.CheckResult` default values."""
+        """Test :class:`codechecker.task.task.CheckResult` default values."""
         # pylint: disable=no-self-use
         checker_result = CheckResult('taskname')
         expected_checker_result = CheckResult(

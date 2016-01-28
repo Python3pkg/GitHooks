@@ -5,7 +5,7 @@ from unittest import mock
 import yaml
 
 from codechecker.scripts import runner
-from codechecker.checker.task import Task
+from codechecker.task.task import Task
 from codechecker import git
 from codechecker.checkers_spec import (PROJECT_CHECKERS,
                                        FILE_CHECKERS)
@@ -54,9 +54,9 @@ class RunnerTestCase(FakeFSTestCase):
             'project-checkers': ['unittest']
         })
         self.patch_git_repository(precommit_yaml_contents)
-        self.patch_project_checker('unittest',
-                                   taskname='python unittest',
-                                   command='python -m unittest discover .')
+        patch_project_checker('unittest',
+                              taskname='python unittest',
+                              command='python -m unittest discover .')
 
         runner.main()
 
@@ -75,9 +75,9 @@ class RunnerTestCase(FakeFSTestCase):
         staged_files = ['module.py',
                         'module2.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker('pep8',
-                                taskname='PEP8 ${file_relpath}',
-                                command='pep8 ${file_abspath}')
+        patch_file_checker('pep8',
+                           taskname='PEP8 ${file_relpath}',
+                           command='pep8 ${file_abspath}')
 
         runner.main()
 
@@ -101,7 +101,7 @@ class RunnerTestCase(FakeFSTestCase):
         })
         staged_files = ['module.js']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'jshint',
             taskname='JSHint ${file_relpath}',
             command='jshint ${options} ${file_abspath}',
@@ -141,7 +141,7 @@ class RunnerTestCase(FakeFSTestCase):
                         'module2.py',
                         'module.js']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${options}',
@@ -179,7 +179,7 @@ class RunnerTestCase(FakeFSTestCase):
         })
         staged_files = ['module.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${options}',
@@ -217,14 +217,14 @@ class RunnerTestCase(FakeFSTestCase):
         staged_files = ['module.py',
                         'tests/module2.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${options}',
             defaultconfig=pylint_config,
             command_options={'rcfile': '--rcfile=${value}'}
         )
-        self.patch_file_checker(
+        patch_file_checker(
             'pep8',
             taskname='PEP8 ${file_relpath}',
             command='pep8 ${file_abspath}'
@@ -258,7 +258,7 @@ class RunnerTestCase(FakeFSTestCase):
         staged_files = ['module.py',
                         'module2.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${options}',
@@ -303,7 +303,7 @@ class RunnerTestCase(FakeFSTestCase):
         })
         staged_files = ['module.py', 'tests/module.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${options}',
@@ -350,7 +350,7 @@ class RunnerTestCase(FakeFSTestCase):
         })
         staged_files = ['tests/module.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pylint',
             taskname='Pylint ${file_relpath}',
             command='pylint -f parseable ${file_abspath} ${rcfile}',
@@ -386,14 +386,14 @@ class RunnerTestCase(FakeFSTestCase):
         })
         staged_files = ['module.py']
         self.patch_git_repository(precommit_yaml_contents, staged_files)
-        self.patch_file_checker(
+        patch_file_checker(
             'pep8',
             taskname='pep8',
             command='dummy',
         )
-        self.patch_project_checker('unittest',
-                                   taskname='unittest',
-                                   command='dummy')
+        patch_project_checker('unittest',
+                              taskname='unittest',
+                              command='dummy')
 
         runner.main()
 
@@ -417,9 +417,9 @@ class RunnerTestCase(FakeFSTestCase):
             'project-checkers': ['unittest']
         })
         self.patch_git_repository(precommit_yaml_contents)
-        self.patch_project_checker('unittest',
-                                   taskname='python unittest',
-                                   command='python -m unittest discover .')
+        patch_project_checker('unittest',
+                              taskname='python unittest',
+                              command='python -m unittest discover .')
 
         with self.assertRaises(SystemExit) as context:
             runner.main()
@@ -460,48 +460,48 @@ class RunnerTestCase(FakeFSTestCase):
         staged_files_patch.start()
         abspath_patch.start()
 
-    def patch_file_checker(self, checkername, taskname=None, command=None,
-                           defaultconfig=None, command_options=None,
-                           result_creator=None):
-        # pylint: disable=too-many-arguments
-        FILE_CHECKERS[checkername] = self._create_checker_spec(
-            taskname,
-            command,
-            defaultconfig,
-            command_options,
-            result_creator
-        )
+def patch_file_checker(checkername, taskname=None, command=None,
+                       defaultconfig=None, command_options=None,
+                       result_creator=None):
+    # pylint: disable=too-many-arguments
+    FILE_CHECKERS[checkername] = _create_checker_spec(
+        taskname,
+        command,
+        defaultconfig,
+        command_options,
+        result_creator
+    )
 
-    def patch_project_checker(self, checkername, taskname=None,
-                              command=None, defaultconfig=None,
-                              command_options=None, result_creator=None):
-        # pylint: disable=too-many-arguments
-        PROJECT_CHECKERS[checkername] = self._create_checker_spec(
-            taskname,
-            command,
-            defaultconfig,
-            command_options,
-            result_creator
-        )
+def patch_project_checker(checkername, taskname=None,
+                          command=None, defaultconfig=None,
+                          command_options=None, result_creator=None):
+    # pylint: disable=too-many-arguments
+    PROJECT_CHECKERS[checkername] = _create_checker_spec(
+        taskname,
+        command,
+        defaultconfig,
+        command_options,
+        result_creator
+    )
 
-    def _create_checker_spec(self, taskname=None, command=None,
-                             defaultconfig=None, command_options=None,
-                             result_creator=None):
-        # pylint: disable=too-many-arguments
-        checker_spec = {}
-        fields_map = {
-            TASKNAME: taskname,
-            COMMAND: command,
-            DEFAULTCONFIG: defaultconfig,
-            COMMAND_OPTIONS: command_options,
-            RESULT_CREATOR: result_creator
-        }
-        for fieldname in fields_map:
-            value = fields_map[fieldname]
-            if value is None:
-                continue
-            checker_spec[fieldname] = value
-        return checker_spec
+def _create_checker_spec(taskname=None, command=None,
+                         defaultconfig=None, command_options=None,
+                         result_creator=None):
+    # pylint: disable=too-many-arguments
+    checker_spec = {}
+    fields_map = {
+        TASKNAME: taskname,
+        COMMAND: command,
+        DEFAULTCONFIG: defaultconfig,
+        COMMAND_OPTIONS: command_options,
+        RESULT_CREATOR: result_creator
+    }
+    for fieldname in fields_map:
+        value = fields_map[fieldname]
+        if value is None:
+            continue
+        checker_spec[fieldname] = value
+    return checker_spec
 
 def _is_tasks_equal(expected, actual):
     # pylint: disable=protected-access

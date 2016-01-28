@@ -7,7 +7,7 @@ from shlex import split
 from subprocess import (PIPE,
                         STDOUT)
 
-from codechecker.checker.task import CheckResult
+from codechecker.task.task import CheckResult
 
 
 class ShellTestCase(unittest.TestCase):
@@ -25,6 +25,7 @@ class ShellTestCase(unittest.TestCase):
                                            stdout=PIPE, stderr=STDOUT)
 
     def patch_shellcommand_result(self, stdout='', returncode=0):
+        # pylint: disable=no-member
         """Set shell command stdout/stderr and return code."""
         # communicate return tuple of bytes so convert string to bytes
         stdout_bytes = stdout.encode(sys.stdout.encoding)
@@ -33,7 +34,7 @@ class ShellTestCase(unittest.TestCase):
 
     def _prepare_shell_command(self):
         """Mock Popen."""
-        popen_patcher = mock.patch('codechecker.checker.task.Popen',
+        popen_patcher = mock.patch('codechecker.task.task.Popen',
                                    autospec=True)
         self.addCleanup(popen_patcher.stop)
         self.popen = popen_patcher.start()

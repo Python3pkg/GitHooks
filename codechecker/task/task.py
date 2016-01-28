@@ -22,7 +22,7 @@ _CheckResult = namedtuple('CheckResult', 'taskname status summary message')
 class CheckResult(_CheckResult):
     """Describe result of checker execution.
 
-    Contains result of :class:`codechecker.checker.task.Task` call.
+    Contains result of :class:`codechecker.task.task.Task` call.
     """
 
     SUCCESS = 'SUCCESS'
@@ -71,7 +71,7 @@ class Task:
     def __call__(self):
         """Execute checker and return check result.
 
-        :rtype: codechecker.checker.task.CheckResult
+        :rtype: codechecker.task.task.CheckResult
         """
         returncode, stdout = self._execute_shell_command()
         return self.result_creator(self, returncode, stdout)

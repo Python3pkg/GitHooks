@@ -9,8 +9,8 @@ import yaml
 
 from codechecker import worker
 from codechecker import git
-from codechecker.checker.builder import (CheckListBuilder,
-                                         TaskCreator)
+from codechecker.task.builder import (CheckListBuilder,
+                                      TaskCreator)
 from codechecker.checkers_spec import (PROJECT_CHECKERS,
                                        FILE_CHECKERS)
 
@@ -20,7 +20,7 @@ def main():
 
     1. Load checkers configuration from precommit-checkers.yml
 
-    2. Use :py:class:`codechecker.checker.builder.CheckListBuilder` to create
+    2. Use :py:class:`codechecker.task.builder.CheckListBuilder` to create
     list of all configured checkers for project and staged files
 
     3. Next call :py:func:`codechecker.worker.execute_checkers` to
