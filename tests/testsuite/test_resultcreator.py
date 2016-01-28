@@ -1,5 +1,6 @@
 """Test result creators."""
-from codechecker.result_creators import (create_pylint_result,
+from codechecker.result_creators import (create_result_by_returncode,
+                                         create_pylint_result,
                                          create_pyunittest_result,
                                          create_phpunit_result)
 from codechecker.task.task import (Task,
@@ -17,13 +18,12 @@ class PylintResultCreatorTestCase(ShellTestCase):
     """
 
     def test_pass_if_code_rate_is_10(self):
-        """Test if result is determined by function assigned to result_creator attribute."""
         shell_output = create_pylint_output(10)
         self.patch_shellcommand_result(stdout=shell_output)
         taskname = 'pylint'
 
-        task = create_pylint_task(taskname=taskname)
-        task.result_creator = create_pylint_result
+        task = create_pylint_task(taskname=taskname,
+                                  result_creator=create_pylint_result)
         result = task()
 
         expected_result = CheckResult(taskname)
@@ -39,8 +39,9 @@ class PylintResultCreatorTestCase(ShellTestCase):
         self.patch_shellcommand_result(stdout=shell_output)
 
         config = {'accepted-code-rate': 8}
-        task = create_pylint_task(taskname=dummy_taskname, config=config)
-        task.result_creator = create_pylint_result
+        task = create_pylint_task(taskname=dummy_taskname,
+                                  result_creator=create_pylint_result,
+                                  config=config)
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -58,8 +59,8 @@ class PylintResultCreatorTestCase(ShellTestCase):
         shell_output = create_pylint_output(code_rate, messages)
         self.patch_shellcommand_result(stdout=shell_output)
 
-        task = create_pylint_task(taskname=dummy_taskname)
-        task.result_creator = create_pylint_result
+        task = create_pylint_task(taskname=dummy_taskname,
+                                  result_creator=create_pylint_result)
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -75,8 +76,8 @@ class PylintResultCreatorTestCase(ShellTestCase):
         shell_output = '\n'.join(messages)
         self.patch_shellcommand_result(stdout=shell_output)
 
-        task = create_pylint_task(taskname=dummy_taskname)
-        task.result_creator = create_pylint_result
+        task = create_pylint_task(taskname=dummy_taskname,
+                                  result_creator=create_pylint_result)
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -94,8 +95,7 @@ class PythonUnittestResultCreatorTestCase(ShellTestCase):
         shell_output = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=shell_output)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_pyunittest_result
+        task = Task(dummy_taskname, 'dummy-command', create_pyunittest_result)
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -109,8 +109,7 @@ class PythonUnittestResultCreatorTestCase(ShellTestCase):
         shell_output = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=shell_output, returncode=1)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_pyunittest_result
+        task = Task(dummy_taskname, 'dummy-command', create_pyunittest_result)
         result = task()
 
         expected_result = CheckResult(dummy_taskname,
@@ -129,8 +128,7 @@ class PHPUnitResultCreatorTestCase(ShellTestCase):
         stdout = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=stdout)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_phpunit_result
+        task = Task(dummy_taskname, 'dummy-command', create_phpunit_result)
         result = task()
 
         expected_result = CheckResult(
@@ -148,8 +146,7 @@ class PHPUnitResultCreatorTestCase(ShellTestCase):
         stdout = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=stdout)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_phpunit_result
+        task = Task(dummy_taskname, 'dummy-command', create_phpunit_result)
         result = task()
 
         expected_result = CheckResult(
@@ -169,8 +166,7 @@ class PHPUnitResultCreatorTestCase(ShellTestCase):
         stdout = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=stdout, returncode=1)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_phpunit_result
+        task = Task(dummy_taskname, 'dummy-command', create_phpunit_result)
         result = task()
 
         expected_result = CheckResult(
@@ -187,8 +183,7 @@ class PHPUnitResultCreatorTestCase(ShellTestCase):
         stdout = '\n'.join(lines)
         self.patch_shellcommand_result(stdout=stdout, returncode=1)
 
-        task = Task(dummy_taskname, 'dummy-command')
-        task.result_creator = create_phpunit_result
+        task = Task(dummy_taskname, 'dummy-command', create_phpunit_result)
         result = task()
 
         expected_result = CheckResult(
@@ -200,14 +195,17 @@ class PHPUnitResultCreatorTestCase(ShellTestCase):
         assert_checkresult_equal(expected_result, result)
 
 
-def create_pylint_task(taskname='dummy', command='dummy', config=None):
+def create_pylint_task(taskname='dummy', command='dummy',
+                       result_creator=None,config=None):
     """Create Task.
 
     Default config argument contains accepted-code-rate option.
     """
     if config is None:
         config = {'accepted-code-rate': 9}
-    return Task(taskname, command, config)
+    if result_creator is None:
+        result_creator = create_result_by_returncode
+    return Task(taskname, command, result_creator, config)
 
 
 def create_pylint_output(code_rate, messages=tuple()):

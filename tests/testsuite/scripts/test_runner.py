@@ -14,7 +14,8 @@ from codechecker.checkers_spec import (TASKNAME,
                                        DEFAULTCONFIG,
                                        COMMAND_OPTIONS,
                                        RESULT_CREATOR)
-from codechecker.result_creators import create_pylint_result
+from codechecker.result_creators import (create_result_by_returncode,
+                                         create_pylint_result)
 from tests.testsuite.scripts import FakeFSTestCase
 from tests.comparison import UnOrderedCollectionMatcher
 
@@ -62,9 +63,10 @@ class RunnerTestCase(FakeFSTestCase):
 
         expected_command = 'python -m unittest discover .'
         expected_task_name = 'python unittest'
-        expected = UnOrderedCollectionMatcher(
-            [Task(expected_task_name, expected_command)]
-        )
+        expected = UnOrderedCollectionMatcher([
+            Task(expected_task_name, expected_command,
+                 create_result_by_returncode)
+        ])
         self.worker.execute_checkers.assert_called_once_with(expected)
 
     def test_file_checker_is_created_for_files_in_index(self):
@@ -86,7 +88,7 @@ class RunnerTestCase(FakeFSTestCase):
             command = 'pep8 {}'.format(git.abspath(file_path))
             task_name = 'PEP8 {}'.format(file_path)
             expected_checkers.append(
-                Task(task_name, command)
+                Task(task_name, command, create_result_by_returncode)
             )
         expected_checkers = UnOrderedCollectionMatcher(expected_checkers)
         self.worker.execute_checkers \
@@ -117,6 +119,7 @@ class RunnerTestCase(FakeFSTestCase):
             taskname='JSHint module.js',
             command='jshint --config .jshintrc {}' \
                 .format(git.abspath('module.js')),
+            result_creator=create_result_by_returncode,
             config={
                 'config': '.jshintrc'
             }
@@ -157,7 +160,8 @@ class RunnerTestCase(FakeFSTestCase):
             taskname = 'Pylint {}'.format(each_file)
             abspath = git.abspath(each_file)
             command = 'pylint -f parseable {}'.format(abspath)
-            task = Task(taskname, command, pylint_config)
+            task = Task(taskname, command,
+                        create_result_by_returncode, pylint_config)
             expected_tasks.append(task)
         self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher(expected_tasks)
@@ -193,9 +197,9 @@ class RunnerTestCase(FakeFSTestCase):
         expected_task = Task(
             'Pylint module.py',
             'pylint -f parseable {}'.format(git.abspath('module.py')),
+            create_pylint_result,
             pylint_config
         )
-        expected_task.result_creator = create_pylint_result
         self.worker.execute_checkers.assert_called_once_with(
             UnOrderedCollectionMatcher([expected_task])
         )
@@ -235,11 +239,13 @@ class RunnerTestCase(FakeFSTestCase):
         expected_pylintchecker = Task(
             'Pylint module.py',
             'pylint -f parseable {}'.format(git.abspath('module.py')),
+            create_result_by_returncode,
             pylint_config
         )
         expected_pep8_checker = Task(
             'PEP8 {}'.format('tests/module2.py'),
-            'pep8 {}'.format(git.abspath('tests/module2.py'))
+            'pep8 {}'.format(git.abspath('tests/module2.py')),
+            create_result_by_returncode
         )
         expected_checkers = [expected_pylintchecker, expected_pep8_checker]
         self.worker.execute_checkers.assert_called_once_with(
@@ -276,6 +282,7 @@ class RunnerTestCase(FakeFSTestCase):
             task = Task(
                 'Pylint {}'.format(each_file),
                 'pylint -f parseable {}'.format(git.abspath(each_file)),
+                create_result_by_returncode,
                 config={
                     'rcfile': None,
                     'accepted-code-rate': accepted_code_rate
@@ -321,6 +328,7 @@ class RunnerTestCase(FakeFSTestCase):
             Task(
                 'Pylint {}'.format('module.py'),
                 'pylint -f parseable {}'.format(git.abspath('module.py')),
+                create_result_by_returncode,
                 config={
                     'rcfile': None,
                     'accepted-code-rate': global_acceptedcoderate
@@ -331,6 +339,7 @@ class RunnerTestCase(FakeFSTestCase):
             Task(
                 'Pylint {}'.format('tests/module.py'),
                 'pylint -f parseable {}'.format(git.abspath('tests/module.py')),
+                create_result_by_returncode,
                 config={
                     'rcfile': None,
                     'accepted-code-rate': local_acceptedcoderate
@@ -367,6 +376,7 @@ class RunnerTestCase(FakeFSTestCase):
             'Pylint tests/module.py',
             'pylint -f parseable {abspath} --rcfile={rcfile}' \
                 .format(abspath=git.abspath('tests/module.py'), rcfile=rcfile),
+            create_result_by_returncode,
             config={
                 'rcfile': rcfile,
                 'accepted-code-rate': 9
@@ -393,17 +403,20 @@ class RunnerTestCase(FakeFSTestCase):
         )
         patch_project_checker('unittest',
                               taskname='unittest',
-                              command='dummy')
+                              command='dummy',
+                              result_creator=create_result_by_returncode)
 
         runner.main()
 
         expected_unittestchecker = Task(
             'unittest',
-            'dummy'
+            'dummy',
+            create_result_by_returncode
         )
         expected_pep8checker = Task(
             'pep8',
-            'dummy'
+            'dummy',
+            create_result_by_returncode
         )
         expected_checkers = [expected_unittestchecker, expected_pep8checker]
         self.worker.execute_checkers.assert_called_once_with(
@@ -511,7 +524,7 @@ def _is_tasks_equal(expected, actual):
         expected.taskname == actual.taskname and \
         expected._build_command() == actual._build_command() and \
         expected.config == actual.config and \
-        expected.result_creator == actual.result_creator
+        expected._result_creator == actual._result_creator
 
 
 UnOrderedCollectionMatcher.register_equalityfunc(Task, _is_tasks_equal)

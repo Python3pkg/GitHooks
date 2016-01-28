@@ -18,6 +18,7 @@ from string import Template
 
 from codechecker.task.task import Task
 from codechecker import git
+from codechecker.result_creators import create_result_by_returncode
 
 
 class CheckListBuilder:
@@ -135,7 +136,8 @@ class TaskCreator:
         self._command = Template(command)
         self.config = defaultconfig if defaultconfig else {}
         self._command_options = command_options
-        self._result_creator = result_creator
+        self._result_creator = result_creator \
+            if result_creator else create_result_by_returncode
 
     def create(self, relpath=None, config=None):
         """Create Task for specified file."""
@@ -148,11 +150,9 @@ class TaskCreator:
             taskname = self._taskname.template
             command = self._command.template
 
-        task = Task(taskname, command, config)
+        task = Task(taskname, command, self._result_creator, config)
         if self._command_options:
             task.command_options = self._command_options
-        if self._result_creator:
-            task.result_creator = self._result_creator
         return task
 
     def set_config(self, config):

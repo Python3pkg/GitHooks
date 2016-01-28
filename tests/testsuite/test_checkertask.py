@@ -3,6 +3,7 @@ import unittest
 
 from codechecker.task.task import (Task as CheckerTask,
                                    CheckResult)
+from codechecker.result_creators import create_result_by_returncode
 from tests.testsuite.testcase import (ShellTestCase,
                                       assert_checkresult_equal)
 
@@ -19,7 +20,7 @@ class ExitCodeCheckerTestCase(ShellTestCase):
 
     def test_task_is_executable(self):
         """Executing task should create new process."""
-        task = CheckerTask('taskname', 'command')
+        task = CheckerTask('taskname', 'command', create_result_by_returncode)
 
         task()
         self.assert_shell_command_executed('command')
@@ -27,14 +28,14 @@ class ExitCodeCheckerTestCase(ShellTestCase):
     def test_task_returns_CheckResult(self):
         """Checker task should return :class:`codechecker.task.task.CheckResult`"""
         # pylint: disable=no-self-use
-        task = CheckerTask('taskname', 'command')
+        task = CheckerTask('taskname', 'command', create_result_by_returncode)
         result = task()
         expected_result = CheckResult('taskname')
         assert_checkresult_equal(expected_result, result)
 
     def test_CheckResult_has_error_status_if_command_fails(self):
         """Task should fail if command exits with non zero status"""
-        task = CheckerTask('taskname', 'command')
+        task = CheckerTask('taskname', 'command', create_result_by_returncode)
         errmsg = 'error message'
 
         self.patch_shellcommand_result(stdout=errmsg, returncode=1)
@@ -47,7 +48,8 @@ class ExitCodeCheckerTestCase(ShellTestCase):
     def test_task_accepts_config(self):
         config = {'option': 'value'}
 
-        task = CheckerTask('dummy', 'dummy', config)
+        task = CheckerTask('dummy', 'dummy',
+                           create_result_by_returncode, config)
         self.assertEqual('value', task.config['option'])
 
 
@@ -61,7 +63,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'rcfile': 'pylintrc'
         }
 
-        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task = CheckerTask('dummy-taskname', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'rcfile': '--rcfile=${value}'
         }
@@ -77,7 +80,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'config': '.jshintrc'
         }
 
-        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task = CheckerTask('dummy-taskname', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'config': '--config ${value}'
         }
@@ -92,7 +96,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'config': '.jshint rc'
         }
 
-        task = CheckerTask('dummy-taskname', command_pattern, config)
+        task = CheckerTask('dummy-taskname', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'config': '--config ${value}'
         }
@@ -107,7 +112,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'executable': 'path/to/phpunit'
         }
 
-        task = CheckerTask('dummy', command_pattern, config)
+        task = CheckerTask('dummy', command_pattern,
+                           create_result_by_returncode, config)
         task()
 
         expected_command = 'path/to/phpunit'
@@ -119,7 +125,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'config': ''
         }
 
-        task = CheckerTask('dummy', command_pattern, config)
+        task = CheckerTask('dummy', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'config': '--config ${value}'
         }
@@ -135,7 +142,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'opt2': 'val2'
         }
 
-        task = CheckerTask('dummy', command_pattern, config)
+        task = CheckerTask('dummy', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'opt1': '--opt1 ${value}',
             'opt2': '${value}'
@@ -151,7 +159,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'opt': None
         }
 
-        task = CheckerTask('dummy', command_pattern, config)
+        task = CheckerTask('dummy', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'opt': '--opt1 ${value}'
         }
@@ -166,7 +175,8 @@ class BuildShellCommandTestCase(ShellTestCase):
             'opt': None
         }
 
-        task = CheckerTask('dummy', command_pattern, config)
+        task = CheckerTask('dummy', command_pattern,
+                           create_result_by_returncode, config)
         task.command_options = {
             'opt': '--opt1 ${value}'
         }
@@ -184,15 +194,14 @@ class CustomResultCreatorTestCase(ShellTestCase):
     """
 
     def test_pass_if_code_rate_is_10(self):
-        """Test if result is determined by function assigned to result_creator attribute."""
+        """Test if result is determined by proper result_creator."""
         expected_summary = 'expected summary'
         def result_creator(task, *_):
             return CheckResult(task.taskname, summary=expected_summary)
         self.patch_shellcommand_result(stdout='dummy')
         taskname = 'dummy'
 
-        task = CheckerTask(taskname, 'dummy-command')
-        task.result_creator = result_creator
+        task = CheckerTask(taskname, 'dummy-command', result_creator)
         result = task()
 
         expected_result = CheckResult(taskname, summary=expected_summary)

@@ -51,7 +51,7 @@ class Task:
     # pylint: disable=too-few-public-methods
     """Execute checker and return check result."""
 
-    def __init__(self, taskname, command, config=None):
+    def __init__(self, taskname, command, result_creator, config=None):
         """Set task name and command.
 
         :param taskname: Task name visible in checking result
@@ -65,8 +65,8 @@ class Task:
             self.config = {}
         else:
             self.config = config
-        self.result_creator = create_result_by_returncode
         self.command_options = {}
+        self._result_creator = result_creator
 
     def __call__(self):
         """Execute checker and return check result.
@@ -74,7 +74,7 @@ class Task:
         :rtype: codechecker.task.task.CheckResult
         """
         returncode, stdout = self._execute_shell_command()
-        return self.result_creator(self, returncode, stdout)
+        return self._result_creator(self, returncode, stdout)
 
     def __repr__(self):
         """Create representation of Task."""
@@ -140,21 +140,3 @@ class Task:
             options_mapping
         )
         return split(command_string)
-
-
-def create_result_by_returncode(task, returncode, shell_output) -> CheckResult:
-    """Create CheckResult based on shell return code.
-
-    .. list-table:: Result status
-       :header-rows: 1
-
-       * - Status
-         - Description
-       * - SUCCESS
-         - If checker command exit status is 0
-       * - ERROR
-         - If checker command exit status is not 0
-    """
-    if returncode == 0:
-        return CheckResult(task.taskname)
-    return CheckResult(task.taskname, CheckResult.ERROR, message=shell_output)
