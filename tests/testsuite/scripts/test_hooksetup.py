@@ -27,14 +27,14 @@ class TestHookSetup(FakeFSTestCase):
         precommit_hook_path = path.join(self.repo_path,
                                         '.git/hooks/pre-commit')
         checker_config_path = path.join(self.repo_path,
-                                        'precommit-checkers.yml')
+                                        '.checkers.yml')
         self.assertTrue(
             path.isfile(precommit_hook_path),
             'setup-githook should create .git/hooks/pre-commit file'
         )
         self.assertTrue(
             path.isfile(checker_config_path),
-            'setup-githook should create precommit-checkers.yml file'
+            'setup-githook should create .checkers.yml file'
         )
         self.assertTrue(
             os.access(precommit_hook_path, os.X_OK),
@@ -47,7 +47,7 @@ class TestHookSetup(FakeFSTestCase):
     def test_setup_does_not_override_existing_checker_config(self):
         git_hooks_dir = path.join(self.repo_path, '.git/hooks/')
         checkers_conf_path = path.join(self.repo_path,
-                                       'precommit-checkers.yml')
+                                       '.checkers.yml')
         checkers_conf_contents = 'This is important data'
         files_structure = {
             git_hooks_dir: {},
@@ -61,7 +61,7 @@ class TestHookSetup(FakeFSTestCase):
         checkers_conf_actual = open(checkers_conf_path).read()
         self.assertEqual(checkers_conf_contents, checkers_conf_actual,
                          'setup-githook should not override existing'
-                         ' precommit-checkers.yml')
+                         ' .checkers.yml')
 
     def test_setup_does_not_override_existing_hooks(self):
         precommit_hook_path = path.join(self.repo_path,

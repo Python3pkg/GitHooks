@@ -20,7 +20,7 @@ Number of workers is equal to number of your cpu logical cores, every worker is 
 
 .. image:: https://cloud.githubusercontent.com/assets/898669/12296208/7979196a-ba06-11e5-8328-5fac5e9912cf.png
 
-In `precommit-checkers.yml` you can configure which checkers checks which files and define checkers configuration. 
+In `.checkers.yml` you can configure which checkers checks which files and define checkers configuration.
 
 There are two categories of checkers: project-checkers and file-checker. 
 
@@ -66,7 +66,7 @@ File checkers
 Examples
 --------
 
-Below are example `precommit-checkers.yml` contents.
+Below are example `.checkers.yml` contents.
 
 .. code-block:: yaml
 
@@ -75,7 +75,7 @@ Below are example `precommit-checkers.yml` contents.
      '*.py': [pylint, pep8]
      '*.js': jshint
 
-If your `precommit-checkers.yml` is same as above, pre-commit check will execute python `unittest` for project, `pylint` and `pep8` for `*.py` files and jshint for js files.
+If your `.checkers.yml` is same as above, pre-commit check will execute python `unittest` for project, `pylint` and `pep8` for `*.py` files and jshint for js files.
 `pep8` and `jshint` checkers does not pass if at least one warning will occur. `pylint` does not pass if computed code rate is below `accepted_code_rate`, default `accepted_code_rate` is 9.
 
 ----
@@ -172,12 +172,12 @@ Git hooks setup
 
 #. Install `code-checker` `Installation`_
 #. Change current working directory to git repository `cd /path/to/repository`
-#. Execute `setup-githooks`. This command creates `pre-commit` hook which run checkers defined in `precommit-checkers.yml`
+#. Execute `setup-githooks`. This command creates `pre-commit` hook which run checkers defined in `.checkers.yml`
 
 .. note::
 
    `setup-githooks` fail if `.git/hooks/pre-commit` already exists. You should delete it manually first.
-   Also if `precommit-checkers.yml` already exists `setup-githooks` leaves it untouched.
+   Also if `.checkers.yml` already exists `setup-githooks` leaves it untouched.
 
 .. note::
 

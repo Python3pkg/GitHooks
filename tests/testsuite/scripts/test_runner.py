@@ -444,12 +444,12 @@ class RunnerTestCase(FakeFSTestCase):
                              staged_files=None):
         """Prepare fake git repository and chdir to git repo
 
-        Create precommit-checkers.yml with passed test contents.
+        Create .checkers.yml with passed test contents.
         If staged_files is is not empty then checkers acts as if these files
         was staged, otherwise empty git staging area is simulated."""
 
         repo_root = self.repo_root
-        precommit_yaml_path = path.join(repo_root, 'precommit-checkers.yml')
+        precommit_yaml_path = path.join(repo_root, '.checkers.yml')
         file_structure = {
             precommit_yaml_path: precommit_yaml_contents
         }

@@ -8,7 +8,7 @@ def main():
     """Create pre-commit hook and checkers config.
 
     - Create pre-commit hook, if pre-commit hook already exists raise exception
-    - Create precommit-checkers.yml if does not exists yet
+    - Create .checkers.yml if does not exists yet
     """
     repo_dir = git.find_repository_dir(os.getcwd())
     precommit_hook_path = os.path.join(repo_dir, '.git/hooks/pre-commit')
@@ -22,7 +22,7 @@ def main():
     hook_file_stat = os.stat(precommit_hook_path)
     os.chmod(precommit_hook_path, hook_file_stat.st_mode | stat.S_IEXEC)
 
-    checkers_config_path = os.path.join(repo_dir, 'precommit-checkers.yml')
+    checkers_config_path = os.path.join(repo_dir, '.checkers.yml')
     if not os.path.isfile(checkers_config_path):
         checkers_config = open(checkers_config_path, 'w')
         checkers_config.write('# Configure your checkers here')

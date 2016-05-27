@@ -1,4 +1,4 @@
-"""Execute checkers defined in precommit-checkers.yml.
+"""Execute checkers defined in .checkers.yml.
 
 see :func:`codechecker.scripts.runner.main`
 """
@@ -18,7 +18,7 @@ from codechecker.checkers_spec import (PROJECT_CHECKERS,
 def main():
     """Run checkers.
 
-    1. Load checkers configuration from precommit-checkers.yml
+    1. Load checkers configuration from .checkers.yml
 
     2. Use :py:class:`codechecker.task.builder.CheckListBuilder` to create
     list of all configured checkers for project and staged files
@@ -29,7 +29,7 @@ def main():
     4. If :py:func:`codechecker.worker.execute_checkers` return non
     empty value script exits with status 1 so commit is aborted
     """
-    checkers_data = yaml.load(open('precommit-checkers.yml', 'r'))
+    checkers_data = yaml.load(open('.checkers.yml', 'r'))
     _validate_checkers_data(checkers_data)
     checklist_builder = _init_checkers_builder()
     if 'config' in checkers_data:
@@ -65,10 +65,10 @@ def _init_checkers_builder():
 
 
 def _validate_checkers_data(checkers_data):
-    """Check if precommit-checkers.yml contains valid options only."""
+    """Check if .checkers.yml contains valid options only."""
     for each_option in checkers_data:
         if each_option not in ('config', 'project-checkers', 'file-checkers'):
-            raise ValueError('precommit-checkers.yml contains'
+            raise ValueError('.checkers.yml contains'
                              ' invalid option "{}"'.format(each_option))
 
 
