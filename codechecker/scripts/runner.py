@@ -74,7 +74,7 @@ def _validate_checkers_data(checkers_data):
 
 def _set_checkers_config(checklist_builder, config):
     """Configure checker factories."""
-    for each_checker, each_conf in config.items():
+    for each_checker, each_conf in list(config.items()):
         checklist_builder.configure_checker(each_checker, each_conf)
 
 
@@ -90,7 +90,7 @@ def _create_file_checkers(checklist_builder, checkers):
     """Create file checkers."""
     staged_files = git.get_staged_files()
     files_previously_matched = set()
-    patterns_sorted = _sort_file_patterns(checkers.keys())
+    patterns_sorted = _sort_file_patterns(list(checkers.keys()))
     for path_pattern in patterns_sorted:
         checkers_list = checkers[path_pattern]
         if isinstance(checkers_list, str):

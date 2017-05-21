@@ -73,9 +73,9 @@ def gen_doc():
     for each_checkername in all_checkers_docdata:
         checker_spec = all_checkers_docdata[each_checkername]
         print(each_checkername)
-        print('#' * len(each_checkername))
+        print(('#' * len(each_checkername)))
         print()
-        print(checker_spec['statusses_table'])
+        print((checker_spec['statusses_table']))
         print()
         tablegen = RSTTableGenerator()
         tablegen.set_caption('Default config')
@@ -91,7 +91,7 @@ def gen_doc():
                 .add_field(eachoption_name) \
                 .add_field(each_option.defaultvalue) \
                 .add_field(each_option.description)
-        print(tablegen.generate_rst())
+        print((tablegen.generate_rst()))
         print()
 
 

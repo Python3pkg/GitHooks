@@ -18,7 +18,7 @@ class FakeFSTestCase(fake_filesystem_unittest.TestCase):
         :raises: :exc:`ValueError` if dict describing file structure is invalid
         """
 
-        for file_path, contents in file_structure.items():
+        for file_path, contents in list(file_structure.items()):
             if isinstance(contents, str):
                 self.fs.CreateFile(file_path, contents=contents)
             elif isinstance(contents, dict):

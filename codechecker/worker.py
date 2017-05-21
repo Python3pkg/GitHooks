@@ -33,11 +33,11 @@ def execute_checkers(jobs):
         _print_result(result)
         if result.status == CheckResult.ERROR:
             is_ok = False
-    print('-' * 80)
+    print(('-' * 80))
     if is_ok:
-        print(_success('OK'))
+        print((_success('OK')))
     else:
-        print(_error('Commit aborted'))
+        print((_error('Commit aborted')))
 
     if is_ok:
         return 0
@@ -57,9 +57,9 @@ def _print_result(result):
     summary = _SUMMARY_FORMAT[result.status](summary_raw)
     taskname = _bold(result.taskname)
 
-    print('* {task}: {summary}'.format(task=taskname, summary=summary))
+    print(('* {task}: {summary}'.format(task=taskname, summary=summary)))
     if result.message:
-        print(result.message)
+        print((result.message))
 
 
 def _error(text):

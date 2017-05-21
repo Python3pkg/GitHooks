@@ -172,7 +172,7 @@ class TaskCreator:
         if not config:
             return copy.copy(self.config)
         result_config = copy.copy(self.config)
-        for option_name, option_value in config.items():
+        for option_name, option_value in list(config.items()):
             if option_name not in self.config:
                 msg = '"{}" is not valid option for "{}"' \
                     .format(option_name, self._checkername)
